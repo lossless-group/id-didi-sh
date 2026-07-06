@@ -78,9 +78,10 @@ documentation for consumers to copy in — **no shared package, on purpose.**
 
 ## Implementation increments
 
-- [ ] **1 — Walking skeleton.** `mix phx.new`, migrations, keypair,
-      magic-link issue → redeem → cookie → offline verify → `/api/me`,
-      proven by a curl script.
+- [x] **1 — Walking skeleton** *(2026-07-06)*. Full schema migration,
+      Ed25519 keypair + JWKS, magic-link issue → redeem → `didi_session`
+      cookie → `/api/me` → refresh → logout. 19 tests green; proven live by
+      `scripts/prove-skeleton.sh`.
 - [ ] **2 — First consumer.** augment-it's TS verify adapter + access panel,
       dev-mode against localhost.
 - [ ] **3 — Invites + admin.** Invite tokens, LiveView console, auth events.
@@ -101,9 +102,21 @@ brew install elixir                # Elixir ≥ 1.18 / OTP 27 (asdf works too)
 mix archive.install hex phx_new    # the Phoenix project generator
 ```
 
-Once increment 1 lands, `mix setup` will be the one-command bootstrap. Local
-dev uses a host-only cookie on `localhost` and a dev keypair; the `.didi.sh`
-cookie is only meaningful deployed.
+Then:
+
+```sh
+mix setup                                  # deps + db + migrations + assets
+mix id.seed alice@example.com "Alice"      # invite stand-in until increment 3
+mix phx.server                             # http://localhost:4000
+./scripts/prove-skeleton.sh                # the increment-1 acceptance proof
+mix test                                   # the suite
+```
+
+Local dev uses a host-only cookie on `localhost` and an auto-generated dev
+keypair (`priv/keys/`, gitignored); the `.didi.sh` cookie is only meaningful
+deployed. `mix id.gen.keypair` produces the production `ID_SIGNING_JWK`.
+Dev-only: magic-link responses echo the raw token (`echo_login_tokens`) so
+the prove script runs without reading the Swoosh mailbox at `/dev/mailbox`.
 
 Secrets (signing keypair, R2 credentials, email API key, OAuth client
 secrets) come from the environment — never committed, never in this repo.

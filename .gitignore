@@ -1,21 +1,46 @@
-# Elixir / Phoenix
+# The directory Mix will write compiled artifacts to.
 /_build/
-/deps/
+
+# If you run "mix test --cover", coverage assets end up here.
 /cover/
+
+# The directory Mix downloads your dependencies sources to.
+/deps/
+
+# Where 3rd-party dependencies like ExDoc output generated docs.
 /doc/
+
+# Ignore .fetch files in case you like to edit your project deps locally.
 /.fetch
+
+# If the VM crashes, it generates a dump, let's ignore it too.
 erl_crash.dump
+
+# Also ignore archive artifacts (built via "mix archive.build").
 *.ez
-*.beam
-/config/*.secret.exs
-.elixir_ls/
-.lexical/
 
-# Phoenix assets
+# Temporary files, for example, from tests.
+/tmp/
+
+# Ignore package tarball (built via "mix hex.build").
+id_didi_sh-*.tar
+
+# Ignore assets that are produced by build tools.
 /priv/static/assets/
-/priv/static/cache_manifest.json
-node_modules/
 
+# Ignore digested assets cache.
+/priv/static/cache_manifest.json
+
+# In case you use Node.js/npm, you want to ignore these.
+npm-debug.log
+/assets/node_modules/
+
+# Database files
+*.db
+*.db-*
+
+
+# --- id-didi-sh additions (on top of generated Phoenix ignore) ---
 # Database files (libSQL/SQLite) — the store lives on a volume, never in git
 *.db
 *.db-*
@@ -31,6 +56,7 @@ node_modules/
 !.env.example
 *.pem
 *.key
+/priv/keys/
 
 # OS / editor
 .DS_Store
