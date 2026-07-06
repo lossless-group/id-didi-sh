@@ -6,10 +6,13 @@ whichever app invited you), and you're signed in across **memos**
 (memopop-ai), **decks** (dididecks-ai), and **augment-it** via a single
 `.didi.sh` session cookie.
 
-> **Status: pre-implementation.** The spec is written and the stack is
-> decided; increment 1 (the Phoenix walking skeleton) is next. The canonical
-> spec lives in the parent pseudomonorepo:
+> **Status: increment 1 shipped** — the walking skeleton is proven live; see
+> the increments checklist below. The canonical spec lives in the parent
+> pseudomonorepo:
 > [`ai-labs/context-v/specs/Id-Didi-Sh-Identity-Service.md`](https://github.com/lossless-group/lossless-ai-labs/blob/main/context-v/specs/Id-Didi-Sh-Identity-Service.md)
+>
+> **Splash:** [lossless-group.github.io/id-didi-sh](https://lossless-group.github.io/id-didi-sh/) —
+> the repo's Pages presence (`splash/`), carrying the platform pitch and the build log.
 
 ## What it is
 
