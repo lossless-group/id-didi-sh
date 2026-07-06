@@ -121,3 +121,18 @@ if config_env() == :prod do
     cookie_domain: System.get_env("ID_COOKIE_DOMAIN") || ".didi.sh",
     cookie_secure: true
 end
+
+# Email — with RESEND_API_KEY present (Fly secret in prod; sourced .env for
+# local testing), magic links go out via the Resend adapter. Without it,
+# the per-env default stands (dev: Swoosh Local mailbox at /dev/mailbox).
+# EMAIL_FROM overrides the sender — required to stay onboarding@resend.dev
+# until the didi.sh domain is verified in Resend.
+if resend_key = System.get_env("RESEND_API_KEY") do
+  config :id_didi_sh, IdDidiSh.Mailer,
+    adapter: IdDidiSh.Mailer.ResendAdapter,
+    api_key: resend_key
+end
+
+if email_from = System.get_env("EMAIL_FROM") do
+  config :id_didi_sh, :identity, email_from: email_from
+end

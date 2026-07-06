@@ -10,13 +10,15 @@ defmodule IdDidiSh.Accounts.MagicLinkNotifier do
   alias IdDidiSh.Mailer
 
   def deliver(email, raw_token) do
-    issuer =
-      Application.get_env(:id_didi_sh, :identity, [])
-      |> Keyword.get(:issuer, "https://id.didi.sh")
+    identity = Application.get_env(:id_didi_sh, :identity, [])
+    issuer = Keyword.get(identity, :issuer, "https://id.didi.sh")
+    # EMAIL_FROM overrides (runtime.exs) — must be onboarding@resend.dev
+    # until the didi.sh domain is verified in Resend.
+    from_addr = Keyword.get(identity, :email_from, "no-reply@didi.sh")
 
     new()
     |> to(email)
-    |> from({"didi.sh", "no-reply@didi.sh"})
+    |> from({"didi.sh", from_addr})
     |> subject("Your sign-in link")
     |> text_body("""
     Sign in with this single-use link (expires in 15 minutes):
