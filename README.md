@@ -94,10 +94,16 @@ documentation for consumers to copy in — **no shared package, on purpose.**
 
 ## Development
 
-Prereqs: Elixir ≥ 1.18 / OTP 27 (asdf or Homebrew), and — once increment 1
-lands — `mix setup` will be the one-command bootstrap. Local dev uses a
-host-only cookie on `localhost` and a dev keypair; the `.didi.sh` cookie is
-only meaningful deployed.
+First-time setup (macOS):
+
+```sh
+brew install elixir                # Elixir ≥ 1.18 / OTP 27 (asdf works too)
+mix archive.install hex phx_new    # the Phoenix project generator
+```
+
+Once increment 1 lands, `mix setup` will be the one-command bootstrap. Local
+dev uses a host-only cookie on `localhost` and a dev keypair; the `.didi.sh`
+cookie is only meaningful deployed.
 
 Secrets (signing keypair, R2 credentials, email API key, OAuth client
 secrets) come from the environment — never committed, never in this repo.
