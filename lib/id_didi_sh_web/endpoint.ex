@@ -43,6 +43,11 @@ defmodule IdDidiShWeb.Endpoint do
   plug Plug.RequestId
   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
 
+  # Headless-API CORS — before the router so OPTIONS preflights are
+  # answered even for routes the router would 404. Origin allowlist per
+  # env in config (:identity, :cors_origins).
+  plug IdDidiShWeb.Plugs.CORS
+
   plug Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],
     pass: ["*/*"],

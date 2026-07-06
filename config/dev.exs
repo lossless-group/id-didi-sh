@@ -94,4 +94,7 @@ config :swoosh, :api_client, false
 config :id_didi_sh, :identity,
   issuer: "http://localhost:4000",
   echo_login_tokens: true,
-  allow_dev_keys: true
+  allow_dev_keys: true,
+  # Local shells allowed to call the headless API from the browser with
+  # credentials. augment-it shell is :3100.
+  cors_origins: ["http://localhost:3100"]
