@@ -13,6 +13,10 @@ whichever app invited you), and you're signed in across **memos**
 >
 > **Splash:** [lossless-group.github.io/id-didi-sh](https://lossless-group.github.io/id-didi-sh/) —
 > the repo's Pages presence (`splash/`), carrying the platform pitch and the build log.
+>
+> **Landing:** `landing/` — the same pitch as a conversion surface for the
+> apex **didi.sh**, deployed on Vercel (domain registered there); see
+> `landing/README.md` for the one-time wiring.
 
 ## What it is
 
