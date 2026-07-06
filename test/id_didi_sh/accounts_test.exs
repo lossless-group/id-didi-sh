@@ -48,6 +48,27 @@ defmodule IdDidiSh.AccountsTest do
     end
   end
 
+  describe "email aliases" do
+    test "alias resolves to the same didi_id; magic link via alias authenticates it" do
+      user = seed_user("primary@example.com")
+      assert {:ok, "alt@humain.vc"} = Accounts.add_email_alias(user, "Alt@Humain.VC")
+      assert Accounts.get_user_by_email("alt@humain.vc").didi_id == user.didi_id
+
+      {:ok, raw, _} = Accounts.issue_magic_link("alt@humain.vc")
+      assert {:ok, redeemed, _} = Accounts.redeem_magic_link(raw)
+      assert redeemed.didi_id == user.didi_id
+    end
+
+    test "an address already in use (primary or alias) is rejected" do
+      a = seed_user("a@example.com")
+      b = seed_user("b@example.com")
+      assert {:error, :taken} = Accounts.add_email_alias(a, "b@example.com")
+      assert {:ok, _} = Accounts.add_email_alias(a, "shared@example.com")
+      assert {:error, :taken} = Accounts.add_email_alias(b, "shared@example.com")
+      assert {:error, :invalid_email} = Accounts.add_email_alias(a, "not-an-email")
+    end
+  end
+
   describe "sessions + tokens" do
     test "create → live → revoke lifecycle" do
       user = seed_user()

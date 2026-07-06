@@ -25,6 +25,7 @@ defmodule IdDidiShWeb.MeController do
       json(conn, %{
         didi_id: user.didi_id,
         email: user.primary_email,
+        alt_emails: Accounts.list_email_aliases(user.didi_id),
         name: user.name,
         handle: user.handle,
         avatar_url: user.avatar_url,

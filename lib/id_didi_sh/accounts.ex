@@ -14,7 +14,7 @@ defmodule IdDidiSh.Accounts do
 
   alias IdDidiSh.Repo
   alias IdDidiSh.UUID7
-  alias IdDidiSh.Accounts.{User, Membership, LoginToken, Session}
+  alias IdDidiSh.Accounts.{User, Membership, LoginToken, Session, UserEmail}
 
   @rand_bytes 32
 
@@ -22,9 +22,41 @@ defmodule IdDidiSh.Accounts do
 
   def get_user(didi_id), do: Repo.get(User, didi_id)
 
+  @doc "Resolve a user by primary email OR any alias — one didi_id, many addresses."
   def get_user_by_email(email) when is_binary(email) do
     lower = String.downcase(email)
-    Repo.one(from u in User, where: fragment("lower(?)", u.primary_email) == ^lower)
+
+    Repo.one(from u in User, where: fragment("lower(?)", u.primary_email) == ^lower) ||
+      Repo.one(
+        from u in User,
+          join: e in UserEmail,
+          on: e.didi_id == u.didi_id,
+          where: fragment("lower(?)", e.email) == ^lower
+      )
+  end
+
+  @doc """
+  Attach an alt email to a user. Rejected when the address is already any
+  user's primary or alias (identity addresses are globally unique).
+  """
+  def add_email_alias(%User{} = user, email) when is_binary(email) do
+    lower = String.downcase(String.trim(email))
+
+    cond do
+      not Regex.match?(~r/^[^@\s]+@[^@\s]+$/, lower) ->
+        {:error, :invalid_email}
+
+      get_user_by_email(lower) != nil ->
+        {:error, :taken}
+
+      true ->
+        {:ok, _} = Repo.insert(%UserEmail{didi_id: user.didi_id, email: lower})
+        {:ok, lower}
+    end
+  end
+
+  def list_email_aliases(didi_id) do
+    Repo.all(from e in UserEmail, where: e.didi_id == ^didi_id, select: e.email)
   end
 
   def create_user(attrs) do
