@@ -14,7 +14,7 @@ defmodule IdDidiSh.Accounts do
 
   alias IdDidiSh.Repo
   alias IdDidiSh.UUID7
-  alias IdDidiSh.Accounts.{User, Membership, LoginToken, Session, UserEmail}
+  alias IdDidiSh.Accounts.{User, Membership, LoginToken, Session, UserEmail, Organization}
 
   @rand_bytes 32
 
@@ -67,6 +67,62 @@ defmodule IdDidiSh.Accounts do
 
   def memberships_for(didi_id) do
     Repo.all(from m in Membership, where: m.didi_id == ^didi_id)
+  end
+
+  ## Organizations + memberships (seeding path until increment 3's admin)
+
+  @doc "Upsert an organization. `id` is the canonical email domain (domain-as-id)."
+  def upsert_org(id, name, slug \\ nil) do
+    id = id |> String.trim() |> String.downcase()
+    slug = slug || String.replace(id, ".", "-")
+
+    Repo.insert(
+      %Organization{id: id, slug: slug, name: name},
+      on_conflict: {:replace, [:name, :slug, :updated_at]},
+      conflict_target: :id
+    )
+  end
+
+  def get_org(id), do: Repo.get(Organization, String.downcase(id))
+
+  @doc """
+  Upsert a membership (didi_id × org_id → role). Role must be one of
+  `Membership.roles/0`; the org must exist. Upsert-by-natural-key: a
+  second call with a different role updates the row, never duplicates.
+  """
+  def upsert_membership(didi_id, org_id, role) do
+    org_id = String.downcase(org_id)
+
+    cond do
+      role not in Membership.roles() ->
+        {:error, :invalid_role}
+
+      is_nil(get_user(didi_id)) ->
+        {:error, :unknown_user}
+
+      is_nil(get_org(org_id)) ->
+        {:error, :unknown_org}
+
+      true ->
+        now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+        Repo.insert_all(
+          Membership,
+          [
+            %{
+              didi_id: didi_id,
+              org_id: org_id,
+              role: role,
+              inserted_at: now,
+              updated_at: now
+            }
+          ],
+          on_conflict: {:replace, [:role, :updated_at]},
+          conflict_target: [:didi_id, :org_id]
+        )
+
+        {:ok, %{didi_id: didi_id, org_id: org_id, role: role}}
+    end
   end
 
   ## Magic links

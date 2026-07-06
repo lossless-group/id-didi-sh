@@ -69,6 +69,38 @@ defmodule IdDidiSh.AccountsTest do
     end
   end
 
+  describe "orgs + memberships" do
+    test "org upsert is idempotent by domain; membership upserts role" do
+      assert {:ok, org} = Accounts.upsert_org("Humain.VC", "Humain VC")
+      assert org.id == "humain.vc"
+      assert {:ok, org2} = Accounts.upsert_org("humain.vc", "HUMAIN")
+      assert org2.name == "HUMAIN"
+
+      user = seed_user("founder@humain.vc")
+      assert {:ok, m} = Accounts.upsert_membership(user.didi_id, "humain.vc", "org_owner")
+      assert m.role == "org_owner"
+      assert {:ok, m2} = Accounts.upsert_membership(user.didi_id, "humain.vc", "editor")
+      assert m2.role == "editor"
+
+      assert [%{org_id: "humain.vc", role: "editor"}] =
+               Accounts.memberships_for(user.didi_id)
+               |> Enum.map(&%{org_id: &1.org_id, role: &1.role})
+    end
+
+    test "membership rejects unknown role, user, org" do
+      user = seed_user("someone@example.com")
+      {:ok, _} = Accounts.upsert_org("example.com", "Example")
+
+      assert {:error, :invalid_role} =
+               Accounts.upsert_membership(user.didi_id, "example.com", "god")
+
+      assert {:error, :unknown_user} = Accounts.upsert_membership("nope", "example.com", "editor")
+
+      assert {:error, :unknown_org} =
+               Accounts.upsert_membership(user.didi_id, "nowhere.io", "editor")
+    end
+  end
+
   describe "sessions + tokens" do
     test "create → live → revoke lifecycle" do
       user = seed_user()
