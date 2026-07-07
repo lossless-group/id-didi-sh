@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
-# generate-og.sh — augment-it OG-image generation, locked recipe.
+# generate-og.sh — id-didi-sh OG-image generation, locked recipe.
 #
-# Wraps the Ideogram v3 generate API per augment-it/splash/DESIGN.md's
+# Wraps the Ideogram v3 generate API per id-didi-sh/splash/DESIGN.md's
 # imagery: block. The locked channels (style_type, magic_prompt,
 # rendering_speed, seed, color_palette, negative_prompt, style_reference)
 # are baked into this script verbatim from DESIGN.md. The only two
@@ -25,12 +25,12 @@
 #   - curl, jq
 #   - Run from splash/ (the parent of scripts/, public/, DESIGN.md)
 #
-# Notes on bootstrap state:
-#   The canonical style_reference path (public/ogimage__Augment-It--Default.jpg)
-#   doesn't exist yet on the first run. The script falls back to the
-#   bootstrap_reference (context-vigilance-kit's ogimage) when the
-#   canonical isn't present. After the first run produces a winner and
-#   it's saved as the canonical, subsequent runs auto-switch to it.
+# Notes on style reference:
+#   id-didi-sh is self-anchored on public/ogimage__Id-Didi-Sh--Default.jpg
+#   (its own winning generation — see DESIGN.md's "Bootstrap — the first
+#   run" section for why this project does NOT fall back to the shared
+#   context-vigilance-kit reference: that image is a text-heavy poster
+#   and contaminated every candidate with garbled pseudo-text).
 
 set -euo pipefail
 
@@ -49,7 +49,7 @@ Formats:
 
 Examples:
   ./scripts/generate-og.sh banner_tall
-  ./scripts/generate-og.sh banner "Top 1/3 of frame is empty negative space, dark dot-grid sky. Bottom 2/3 contains <custom subject>."
+  ./scripts/generate-og.sh banner "Top 1/3 of frame is empty negative space, dark guilloche-etched sky. Bottom 2/3 contains <custom subject>."
 EOF
   exit 2
 fi
@@ -71,48 +71,47 @@ fi
 # ─── format → aspect_ratio + canonical prompt ────────────────────────
 #
 # Prompts follow the generate-consistent-og-images skill canonical:
-#   "Top 1/3 of frame is empty negative space, dark gradient sky.
-#    Bottom 2/3 contains {short subject noun phrase}."
+#   "Top 1/3 of frame is empty negative space, dark guilloche-etched
+#    sky. Bottom 2/3 contains {short subject noun phrase}."
 #
 # Empty-region-first framing is the load-bearing rule — without it,
 # the subject expands to fill the canvas and there's no overlay zone
-# left for SVG site branding. The skill calls this the iter1→iter3
-# Perplexed lesson: subject-first prompts produce 75-85% canvas-height
-# subjects; empty-region-first prompts produce 40-65% canvas-height
-# subjects with the upper region genuinely empty.
+# left for SVG site branding.
 #
 # Forbidden in prompts (already encoded via style_reference and
 # color_palette — repeating them dilutes attention budget):
-#   - color words ("magenta", "dark" beyond the sky descriptor)
-#   - texture descriptors ("dot-grid", "halftone", "ink")
+#   - color words ("copper", "verdigris", "dark" beyond the sky descriptor)
+#   - texture descriptors ("guilloche", "engraved", "intaglio")
 #   - aesthetic adjectives
 #   - brand names
 #
-# Target ≤220 chars per prompt.
+# Target ≤220 chars per prompt. Subject canon: safety-deposit-box-in-a-
+# vault (see DESIGN.md imagery.subject_canon for the full per-format
+# framing table).
 case "$FORMAT" in
   banner)
     ASPECT_RATIO="16x9"
-    DEFAULT_PROMPT="Top 1/3 of frame is empty negative space, dark gradient sky. Bottom 2/3 contains 1950s clerks at a mailroom hatch, manila envelopes spilling onto a checkered floor, metal cabinets behind them."
+    DEFAULT_PROMPT="Top 1/3 of frame is empty negative space, dark guilloche-etched sky. Bottom 2/3 contains a vault wall lined with rows of brass deposit boxes, one open box in the foreground spilling gold coins and diamonds, a key in the lock."
     ;;
   banner_tall)
     ASPECT_RATIO="3x4"
-    DEFAULT_PROMPT="Top 1/3 of frame is empty negative space, dark gradient sky. Bottom 2/3 contains a 1950s clerk in profile placing a manila envelope into an open metal cabinet, satchel at their feet."
+    DEFAULT_PROMPT="Top 1/3 of frame is empty negative space, dark guilloche-etched sky. Bottom 2/3 contains an open brass safety deposit box overflowing with gold coins and loose diamonds, a key hanging from the lock, a vault wall of matching boxes at the edges."
     ;;
   banner_tall_max)
     ASPECT_RATIO="2x3"
-    DEFAULT_PROMPT="Top 1/3 of frame is empty negative space, dark gradient sky. Bottom 2/3 contains a 1950s clerk against a towering metal cabinet wall, manila envelopes cascading at their feet on a checkered floor."
+    DEFAULT_PROMPT="Top 1/3 of frame is empty negative space, dark guilloche-etched sky. Bottom 2/3 contains a tall vault wall of brass deposit boxes converging on one open box overflowing with gold coins and diamonds, a key in the lock."
     ;;
   portrait)
     ASPECT_RATIO="4x5"
-    DEFAULT_PROMPT="Top 1/3 of frame is empty negative space, dark gradient sky. Bottom 2/3 contains a 1950s clerk's hands placing a manila envelope into an open metal cabinet drawer."
+    DEFAULT_PROMPT="Top 1/3 of frame is empty negative space, dark guilloche-etched sky. Bottom 2/3 contains a close-up open brass safety deposit box overflowing with gold coins and loose diamonds, a key in the lock."
     ;;
   portrait_tall)
     ASPECT_RATIO="9x16"
-    DEFAULT_PROMPT="Top 1/3 of frame is empty negative space, dark gradient sky. Bottom 2/3 contains a 1950s clerk at a metal cabinet, manila envelopes cascading toward them on a checkered floor."
+    DEFAULT_PROMPT="Top 1/3 of frame is empty negative space, dark guilloche-etched sky. Bottom 2/3 contains a stacked vault wall of brass deposit boxes thinning down to one open box overflowing with gold coins and diamonds at the bottom."
     ;;
   square)
     ASPECT_RATIO="1x1"
-    DEFAULT_PROMPT="Top 1/3 of frame is empty negative space, dark gradient sky. Bottom 2/3 contains a 1950s clerk placing a manila envelope into a metal cabinet, satchel beside them on a checkered floor."
+    DEFAULT_PROMPT="Top 1/3 of frame is empty negative space, dark guilloche-etched sky. Bottom 2/3 contains an open brass safety deposit box overflowing with gold coins and loose diamonds, one neighboring vault box visible at the edge."
     ;;
   *)
     echo "Unknown format: $FORMAT" >&2
@@ -124,43 +123,40 @@ esac
 PROMPT="${CUSTOM_PROMPT:-$DEFAULT_PROMPT}"
 
 # ─── locked channels (from DESIGN.md imagery: block) ─────────────────
-SEED="20250118"
+SEED="20260706"
 STYLE_TYPE="AUTO"
 MAGIC_PROMPT="OFF"
 RENDERING_SPEED="QUALITY"
 NUM_IMAGES="4"
 
-NEGATIVE_PROMPT="text, typography, lettering, logos, watermarks, central subject filling frame, photorealistic human faces, saturated, rainbow, vibrant, oversized subject, subject in top half"
+NEGATIVE_PROMPT="text, typography, lettering, sign, plaque, banner, poster, label, logos, watermarks, central subject filling frame, photorealistic human faces, saturated, rainbow, vibrant, oversized subject, subject in top half"
 
-# Augment-It palette — 5 weighted members. Mono-with-magenta-pop discipline.
-COLOR_PALETTE_JSON='{"members":[{"color_hex":"#0a0712","color_weight":0.40},{"color_hex":"#f7f4fa","color_weight":0.25},{"color_hex":"#cb5bde","color_weight":0.15},{"color_hex":"#c157f2","color_weight":0.10},{"color_hex":"#3a3052","color_weight":0.10}]}'
+# id-didi-sh credential palette — 5 weighted members. Vault-deep ground,
+# copper (gold/brass) as the dominant pop, verdigris + teal as accents.
+COLOR_PALETTE_JSON='{"members":[{"color_hex":"#060a08","color_weight":0.40},{"color_hex":"#d29a62","color_weight":0.25},{"color_hex":"#f3f6f2","color_weight":0.10},{"color_hex":"#4ecf95","color_weight":0.15},{"color_hex":"#4fbfae","color_weight":0.10}]}'
 
-# ─── style reference — canonical or bootstrap ────────────────────────
-CANONICAL_REF="public/ogimage__Augment-It--Default.jpg"
-BOOTSTRAP_REF="../../context-vigilance-kit/splash/public/ogimage_Context-Vigilance_1024x1024.jpg"
+# ─── style reference — self-anchored, no shared bootstrap ────────────
+CANONICAL_REF="public/ogimage__Id-Didi-Sh--Default.jpg"
 
-if [[ -f "$CANONICAL_REF" ]]; then
-  STYLE_REF_PATH="$CANONICAL_REF"
-  STYLE_REF_KIND="canonical"
-elif [[ -f "$BOOTSTRAP_REF" ]]; then
-  STYLE_REF_PATH="$BOOTSTRAP_REF"
-  STYLE_REF_KIND="bootstrap (context-vigilance — first-run only)"
-else
-  echo "Neither canonical ($CANONICAL_REF) nor bootstrap ($BOOTSTRAP_REF) style reference exists." >&2
-  echo "Fix one of those paths before generating." >&2
+if [[ ! -f "$CANONICAL_REF" ]]; then
+  echo "Canonical style reference ($CANONICAL_REF) doesn't exist." >&2
+  echo "Generate a bootstrap pass with NO style_reference_images first" >&2
+  echo "(color_palette + prompt only, style_type=GENERAL), pick a winner," >&2
+  echo "and save it to $CANONICAL_REF before running this script normally." >&2
   exit 1
 fi
+STYLE_REF_PATH="$CANONICAL_REF"
 
 # ─── archive paths ────────────────────────────────────────────────────
 TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
-SUBJECT_SLUG="mailroom"
-RUN_DIR="ideogram-candidates/${SUBJECT_SLUG}-${FORMAT}-${TIMESTAMP}"
+SUBJECT_SLUG="safety-deposit-box"
+RUN_DIR=".ideogram-candidates/${SUBJECT_SLUG}-${FORMAT}-${TIMESTAMP}"
 mkdir -p "$RUN_DIR"
 
 # ─── log invocation ──────────────────────────────────────────────────
 echo "→ POST https://api.ideogram.ai/v1/ideogram-v3/generate"
 echo "    format:          $FORMAT  ($ASPECT_RATIO)"
-echo "    style_reference: $STYLE_REF_PATH  [$STYLE_REF_KIND]"
+echo "    style_reference: $STYLE_REF_PATH"
 echo "    seed:            $SEED"
 echo "    num_images:      $NUM_IMAGES"
 echo "    prompt:          $PROMPT"
@@ -216,7 +212,7 @@ seed:             $SEED
 num_images:       $NUM_IMAGES
 negative_prompt:  $NEGATIVE_PROMPT
 color_palette:    $COLOR_PALETTE_JSON
-style_reference:  $STYLE_REF_PATH  [$STYLE_REF_KIND]
+style_reference:  $STYLE_REF_PATH
 timestamp:        $TIMESTAMP
 EOF
 
@@ -225,10 +221,9 @@ echo "Done. $NUM_RETURNED candidates saved to $RUN_DIR/"
 echo ""
 echo "Next steps:"
 echo "  1. Open $RUN_DIR/ and pick a winner."
-echo "  2. If you're picking the first canonical, install ffmpeg if needed, then:"
-echo "       ffmpeg -y -i $RUN_DIR/candidate-N.png -q:v 2 $CANONICAL_REF"
-echo "  3. For subsequent format winners, save as:"
-echo "       ffmpeg -y -i $RUN_DIR/candidate-N.png -q:v 2 public/ogimage__Augment-It--{Format}.jpg"
+echo "  2. Save the winner as the format's canonical file:"
+echo "       ffmpeg -y -i $RUN_DIR/candidate-N.png -q:v 2 -update 1 public/ogimage__Id-Didi-Sh--{Format}.jpg"
 echo "       (where {Format} matches the format name above — Banner / BannerTall / Portrait / etc.)"
-echo "  4. If you replace an existing canonical, archive the old one first:"
-echo "       mv $CANONICAL_REF ogimage-archive/ogimage__Augment-It--Default--\$(date +%Y-%m-%d).jpg"
+echo "  3. If you replace an existing canonical, archive the old one first:"
+echo "       mv public/ogimage__Id-Didi-Sh--{Format}.jpg .ogimage-archive/ogimage__Id-Didi-Sh--{Format}--\$(date +%Y-%m-%d).jpg"
+echo "  4. Re-run the overlay-svg-text skill to composite the eyebrow/h1/note back on."

@@ -398,7 +398,7 @@ ornament:
 # compliant consumers preserve unknown top-level keys, so this is safe
 # to keep here as the single source of truth for image generation.
 #
-# The contract: every Ideogram request for an augment-it OG asset uses
+# The contract: every Ideogram request for an id-didi-sh OG asset uses
 # the values below for ALL fields. The only per-request variables are:
 #   - `prompt`           — subject + composition (see imagery.prompt + imagery.subject_canon)
 #   - `aspect_ratio`     — one of imagery.aspect_ratios
@@ -408,9 +408,9 @@ ornament:
 #
 # Aesthetic family — deliberately related to the context-vigilance-kit
 # splash but distinct: same comic-ink crosshatch language, but with
-# magenta-deep as the single pop color (vs. the context-vigilance sienna).
+# copper/verdigris as the pop colors (vs. the context-vigilance sienna).
 # This signals "same family of Lossless illustrative imagery" while
-# preserving augment-it's brand spine.
+# preserving didi.sh's credential/vault brand spine.
 imagery:
   provider: ideogram
   endpoint: POST https://api.ideogram.ai/v1/ideogram-v3/generate
@@ -425,9 +425,9 @@ imagery:
     magic_prompt: OFF             # non-negotiable — prompt-rewriter is the #1
                                   # source of drift across "identical" requests.
     rendering_speed: QUALITY      # use TURBO only when iterating prompts.
-    seed: 20250118                # canonical seed — reads as the ISO date of the
-                                  # Bolt-era foundation entry (the first changelog
-                                  # date in the project's backfilled history).
+    seed: 20260706                # canonical seed — reads as the ISO date of the
+                                  # repo's first commit ("scaffold(id-didi-sh): the
+                                  # identity plane gets its home").
                                   # Bump only when the visual canon itself shifts.
     num_images: 4                 # generate four candidates per run so we can pick
                                   # a winner without burning tokens on a retry.
@@ -440,74 +440,62 @@ imagery:
   # specifically defends the SVG overlay zone in tall aspect ratios,
   # paired with the positive-prompt empty-region declaration.
   negative_prompt: >-
-    text, typography, lettering, logos, watermarks, central subject
-    filling frame, photorealistic human faces, saturated, rainbow,
-    vibrant, oversized subject, subject in top half
+    text, typography, lettering, sign, plaque, banner, poster, label,
+    logos, watermarks, central subject filling frame, photorealistic
+    human faces, saturated, rainbow, vibrant, oversized subject,
+    subject in top half
 
   # ── Prompt convention — skill canonical empty-region-first pattern ──
-  # Pattern: "Top 1/3 of frame is empty negative space, dark gradient
-  # sky. Bottom 2/3 contains {short subject noun phrase}."
+  # Pattern: "Top 1/3 of frame is empty negative space, dark guilloche-
+  # etched sky. Bottom 2/3 contains {short subject noun phrase}."
   #
   # Empty-region-first framing is the load-bearing rule. Without it,
-  # the subject expands to fill the canvas (observed on 2026-05-12
-  # when a misguided "fix" removed the empty-region declaration —
-  # outputs were busy edge-to-edge with no room for SVG branding
-  # overlay). Per the skill: "empty space won't be left as residue;
-  # it has to be declared, named, and given content."
+  # the subject expands to fill the canvas. Per the skill: "empty space
+  # won't be left as residue; it has to be declared, named, and given
+  # content."
   #
   # Forbidden in prompts (already encoded via style_reference and
   # color_palette — repeating dilutes attention budget):
-  #   - color words ("magenta", "ink", brand colors)
-  #   - texture descriptors ("dot-grid", "halftone", "ink-on-paper")
+  #   - color words ("copper", "verdigris", brand colors)
+  #   - texture descriptors ("guilloche", "engraved", "intaglio")
   #   - aesthetic adjectives
   #   - brand names
   #   - any mention of text, writing, labels (negation primes the
   #     concept — text encoders don't process "no X" correctly)
   prompt:
-    pattern: "Top 1/3 of frame is empty negative space, dark gradient sky. Bottom 2/3 contains {subject}."
+    pattern: "Top 1/3 of frame is empty negative space, dark guilloche-etched sky. Bottom 2/3 contains {subject}."
     max_chars_recommended: 220
 
-  # ── Locked color palette — augment-it brand, weighted ──────────────
-  # Weighted for a near-monochrome ink illustration with a single
-  # magenta pop. The ink-deep dominates so the canvas defaults to the
-  # dark void; paper carries the ink-on-paper character work; magenta
-  # and iris carry the single pop accent; slate-700 carries crosshatch
-  # mid-tones for depth. Sum of weights does not need to equal 1;
+  # ── Locked color palette — id-didi-sh credential brand, weighted ───
+  # Weighted for a near-monochrome vault illustration with warm gold/
+  # copper as the dominant pop (the safety-deposit contents) and cool
+  # verdigris/teal as secondary accents (the aged-brass vault hardware,
+  # the security thread). vault-deep dominates so the canvas defaults
+  # to the dark void; paper carries linework highlights (diamond
+  # sparkle, engraved detail). Sum of weights does not need to equal 1;
   # Ideogram interprets them as relative emphasis.
   color_palette:
     members:
-      - { color_hex: "#0a0712", color_weight: 0.40 }   # ink-deep (void background)
-      - { color_hex: "#f7f4fa", color_weight: 0.25 }   # paper (ink-on-paper figure linework)
-      - { color_hex: "#cb5bde", color_weight: 0.15 }   # magenta (the single pop — labels, key papers)
-      - { color_hex: "#c157f2", color_weight: 0.10 }   # iris (secondary pop, used sparingly)
-      - { color_hex: "#3a3052", color_weight: 0.10 }   # slate-700 (crosshatch mid-tones)
+      - { color_hex: "#060a08", color_weight: 0.40 }   # vault-deep (void background)
+      - { color_hex: "#d29a62", color_weight: 0.25 }   # copper (gold/brass pop — coins, box, key)
+      - { color_hex: "#f3f6f2", color_weight: 0.10 }   # paper (linework highlights, diamond sparkle)
+      - { color_hex: "#4ecf95", color_weight: 0.15 }   # verdigris (aged-brass patina accent)
+      - { color_hex: "#4fbfae", color_weight: 0.10 }   # teal (security-thread accent)
 
   # ── Locked style reference — uploaded as style_reference_images ─────
   # This is the strongest consistency signal in the v3 API. Every
   # request uploads this file; texture, lighting, ink density, and
   # crosshatch language are inherited from it.
   #
-  # Bootstrap state: the file at this path doesn't exist yet. For the
-  # FIRST generation run, use the bootstrap_reference below as the
-  # style anchor. After the first run produces a winner, save it as
-  # the canonical path here and switch all subsequent runs to it.
+  # Bootstrapped 2026-07-07: the context-vigilance-kit reference image
+  # (a text-heavy "Keep Calm" poster) contaminated every candidate with
+  # garbled pseudo-text banners — style_reference_images is the
+  # strongest signal in the v3 API and overpowered the negative_prompt.
+  # Re-ran with NO style reference (color_palette + prompt only) and
+  # picked the winner below as id-didi-sh's own self-anchored reference.
   style_reference:
-    path: public/ogimage__Augment-It--Default.jpg
+    path: public/ogimage__Id-Didi-Sh--Default.jpg
     mime: image/jpeg
-
-  # ── Bootstrap reference — temporary anchor for the FIRST run only ──
-  # Until augment-it has its own canonical illustration, use the
-  # context-vigilance-kit ogimage as the style anchor. It carries the
-  # comic-ink crosshatch aesthetic the user explicitly cited as the
-  # target. The single sienna pop in that image will be displaced by
-  # the magenta-weighted color_palette above on generation — but the
-  # linework / texture / density language transfers.
-  # Once we have a winning augment-it asset, set style_reference.path
-  # to it and delete this bootstrap_reference block.
-  bootstrap_reference:
-    path: ../../context-vigilance-kit/splash/public/ogimage_Context-Vigilance_1024x1024.jpg
-    mime: image/jpeg
-    intent: "Style language only — comic-ink crosshatch, monochrome with single pop. The color_palette above will displace the source pop color (sienna → magenta)."
 
   # ── Aspect ratio enum — pick one per request ────────────────────────
   # Maps Lossless format names to Ideogram's allowed values. The
@@ -522,52 +510,53 @@ imagery:
     banner_tall: 3x4              # WhatsApp / iMessage previews (default tall)
     banner_tall_max: 2x3          # dramatic-tall variant; use sparingly
 
-  # ── Subject canon — the agreed visual subject for augment-it ─────
-  # The "mailroom metaphor" for the augment-it workshop:
-  #   - Data sources = mailbags arriving from the mailroom hatch.
-  #   - Microfrontends = file clerks intaking + classifying + filing.
-  #   - The canonical record store = tall metal filing cabinets.
-  #   - Augmentation = the act of filing (placing each piece of paper
-  #     in the right place, with provenance back to the source bag).
+  # ── Subject canon — the agreed visual subject for id-didi-sh ─────
+  # The "safety deposit box" metaphor for the didi.sh credential:
+  #   - The vault = didi.sh, the identity service.
+  #   - The safety deposit box = the didi_session credential.
+  #   - The gold coins and diamonds = the identity/account being
+  #     protected — the thing of value the vault safeguards.
+  #   - The key still in the lock = the one credential that opens it,
+  #     shared across all three consuming services.
   #
-  # This is the *only* subject family used for augment-it OG imagery
+  # This is the *only* subject family used for id-didi-sh OG imagery
   # in the current canon. Per-format crops focus on different parts of
   # the same scene so the family reads as one visual story across
   # banner / banner_tall / portrait / square.
   subject_canon:
-    metaphor: "Data augmentation as mailroom + filing-clerk workflow."
-    era: "1950s office aesthetic — period-correct file clerks, canvas mailbags, tall metal filing cabinets, checkered or parquet floor, hatch window from the mailroom."
-    canonical_subject: "1950s file clerks receiving mailbags at a mailroom hatch, papers spilling onto floor, others filing into tall metal cabinets"
+    metaphor: "Identity as the contents of a safety deposit box — the vault protects it, three consuming services borrow it."
+    era: "Bank-vault aesthetic — brass safety deposit boxes, engraved vault door, banknote-intaglio linework."
+    canonical_subject: "an open brass safety deposit box overflowing with gold coins and loose diamonds, set into a vault wall lined with rows of matching deposit boxes, a key in the lock"
     per_format_focus:
-      banner: "Wide scene — full hatch + clerks + cabinets visible. Mailbags being received in foreground, papers cascading, two clerks at cabinets in mid/background."
-      banner_tall: "Vertical focus — the cabinet wall dominates the bottom 2/3, one clerk reaching into an open cabinet, papers spilling around their feet from a tipped mailbag. Hatch implied at side."
-      banner_tall_max: "Same as banner_tall but more dramatic vertical — taller cabinets, more papers cascading, single clerk."
-      portrait: "Single-clerk close-up — clerk hands inserting a folder into an open cabinet drawer, magenta file tab visible. Some papers on floor in lower-frame."
-      portrait_tall: "Stacked composition — papers cascading top, clerk filing in middle, cabinet base anchor at bottom."
-      square: "Tight crop on the canonical wide scene — one mailbag, one clerk filing, one cabinet visible. Tightest framing of the metaphor."
+      banner: "Wide scene — vault wall with rows of deposit boxes, one open box in foreground spilling gold coins and diamonds, key in the lock."
+      banner_tall: "Vertical focus — a single open deposit box dominates the bottom 2/3, gold coins and diamonds cascading out, a key hanging from the lock, vault wall implied at the edges."
+      banner_tall_max: "Same as banner_tall but more dramatic vertical — a taller vault wall visible above, the single open box more centered."
+      portrait: "Close-up on the open box — coins and diamonds in sharp detail, brass box edges, key still in the lock."
+      portrait_tall: "Stacked composition — a row of vault boxes at top thinning down to one open box at the bottom with jewels."
+      square: "Tight crop — one open deposit box with gold and diamonds, one neighboring box visible at the edge."
 
   # ── Prompt convention — the ONLY free-text per request ─────────────
   # Constraints documented in the Imagery prose section below. The
   # pattern follows the empirical empty-space-first structure from the
-  # generate-consistent-og-images skill (iter3 — subject-first prompts
-  # produce subjects that swallow the overlay zone). Two clauses
-  # separated by a period:
+  # generate-consistent-og-images skill (subject-first prompts produce
+  # subjects that swallow the overlay zone). Two clauses separated by
+  # a period:
   #   1. Top region: declared as empty negative space with concrete
-  #      content (a "dark dot-grid sky") — the model renders it.
+  #      content (a "dark guilloche-etched sky") — the model renders it.
   #   2. Bottom region: contains the actual subject from subject_canon.
   # Explicit numeric proportions ("1/3", "2/3"), never soft terms.
   prompt:
-    pattern: "Top 1/3 of frame is empty negative space, dark dot-grid sky. Bottom 2/3 contains {subject_from_subject_canon}."
-    example_banner_tall: "Top 1/3 of frame is empty negative space, dark dot-grid sky. Bottom 2/3 contains a 1950s file clerk reaching into an open metal filing cabinet, an overturned canvas mailbag at their feet with papers cascading onto a checkered floor."
-    example_banner: "Top 1/3 of frame is empty negative space, dark dot-grid sky. Bottom 2/3 contains 1950s file clerks at a mailroom hatch receiving canvas mailbags, papers spilling onto checkered floor, two clerks filing folders into tall metal cabinets."
-    example_square: "Top 1/3 of frame is empty negative space, dark dot-grid sky. Bottom 2/3 contains a 1950s file clerk filing folders into a tall metal cabinet, an overturned canvas mailbag spilling papers onto the floor beside them."
+    pattern: "Top 1/3 of frame is empty negative space, dark guilloche-etched sky. Bottom 2/3 contains {subject_from_subject_canon}."
+    example_banner_tall: "Top 1/3 of frame is empty negative space, dark guilloche-etched sky. Bottom 2/3 contains an open brass safety deposit box overflowing with gold coins and loose diamonds, a key hanging from the lock, a vault wall of matching boxes at the edges."
+    example_banner: "Top 1/3 of frame is empty negative space, dark guilloche-etched sky. Bottom 2/3 contains a vault wall lined with rows of brass deposit boxes, one open box in the foreground spilling gold coins and diamonds, a key in the lock."
+    example_square: "Top 1/3 of frame is empty negative space, dark guilloche-etched sky. Bottom 2/3 contains an open brass safety deposit box overflowing with gold coins and loose diamonds, one neighboring vault box visible at the edge."
     max_chars_recommended: 220
     forbid:
       # Vocabulary that belongs in tokens, NOT in the prompt:
-      - brand names ("Augment-It", "Lossless")
-      - color names ("magenta", "iris", "violet", "dark", "warm")
-      - aesthetic adjectives ("comic-style", "vibrant-minimal", "demo-shop")
-      - texture descriptors ("crosshatch", "ink", "engraved", "monochrome")
+      - brand names ("didi.sh", "Lossless")
+      - color names ("copper", "verdigris", "teal", "dark", "warm")
+      - aesthetic adjectives ("comic-style", "vibrant-minimal", "credential-posture")
+      - texture descriptors ("crosshatch", "ink", "engraved", "guilloche", "monochrome")
       # All of the above are already locked via style_reference_images,
       # color_palette, and style_type. Repeating them in the prompt
       # only dilutes the model's attention budget for the actual subject.
@@ -576,7 +565,7 @@ imagery:
   candidate_archive: .ideogram-candidates/    # one timestamped subdir per run
   canonical_archive: .ogimage-archive/        # date-suffixed copies of replaced canonicals
   output_dir: public/                          # canonical JPEGs live here
-  naming_convention: "ogimage__Augment-It--{Format-Or-Variant}.{ext}"
+  naming_convention: "ogimage__Id-Didi-Sh--{Format-Or-Variant}.{ext}"
 ---
 
 # Augment It — Design System
@@ -781,58 +770,58 @@ The "manuscript-style chapter mark" — but stamped with a module-marker chip. R
 
 ## Imagery
 
-All augment-it OG imagery is generated via Ideogram's v3 generate endpoint. The frontmatter's `imagery:` block is the **complete, locked recipe**: every field there is constant across every request. The only two things that vary per call are the `prompt` (subject + composition) and the `aspect_ratio` (one entry from `imagery.aspect_ratios`).
+All id-didi-sh OG imagery is generated via Ideogram's v3 generate endpoint. The frontmatter's `imagery:` block is the **complete, locked recipe**: every field there is constant across every request. The only two things that vary per call are the `prompt` (subject + composition) and the `aspect_ratio` (one entry from `imagery.aspect_ratios`).
 
 This is on purpose. The single biggest cause of "why don't these four banners look like they belong together" is per-request drift in brand vocabulary, palette wording, and style adjectives smuggled into the prompt. Ideogram's v3 schema gives us structured channels for all of that — `style_reference_images`, `color_palette`, `style_type`, `magic_prompt` — and using them is strictly more reliable than typing the same adjectives into every prompt and hoping the model interprets them the same way twice.
 
-### Aesthetic family — comic-ink, monochrome with a single magenta pop
+### Aesthetic family — comic-ink vault engraving, near-monochrome with a copper/verdigris pop
 
-The illustrative language is **comic-style inking — heavy contour lines and dense crosshatching, near-monochrome on a near-black ground, with a single brand-spine color used sparingly as a pop accent.** This is deliberately the same illustration family as [`context-vigilance-kit/splash`](../../context-vigilance-kit/splash/) — same crosshatch density, same dark-void atmosphere, same single-pop discipline — but with **magenta-deep** displacing context-vigilance's sienna/orange. A reader who lands on both splashes back-to-back should feel the family resemblance; a reader who lands on augment-it alone should never wonder what brand they're looking at.
+The illustrative language is **comic-style inking — heavy contour lines and dense crosshatching, near-monochrome on a near-black ground, with the credential brand's copper and verdigris used sparingly as pop accents.** This is deliberately the same illustration family as [`context-vigilance-kit/splash`](../../context-vigilance-kit/splash/) — same crosshatch density, same dark-void atmosphere, same restrained-pop discipline — but with **copper (gold) and verdigris (aged brass)** displacing context-vigilance's sienna/orange. A reader who lands on both splashes back-to-back should feel the family resemblance; a reader who lands on id-didi-sh alone should never wonder what brand they're looking at.
 
-Why mono-with-one-pop rather than full-color? Three reasons:
+Why mono-with-restrained-pop rather than full-color? Three reasons:
 
-1. **Augment-it's full palette has three brand-spine colors (magenta + violet + iris) plus three signal hues (cyan + amber + lime).** If all six show up in a generated image, the image reads as "an Ideogram thing" rather than as "an augment-it thing." Constraining the visual palette to a single magenta pop forces the image to lean on *composition + line work* for legibility, not on color noise.
-2. **Comic-ink imagery scales gracefully across aspect ratios.** A 9×16 portrait_tall and a 16×9 banner share a visual language even though they crop the scene differently; full-color illustrations tend to lose their identity when the composition changes.
-3. **It pairs cleanly with the splash's vibrant UI.** The page itself already carries the saturated magenta-iris brand experience. An equally saturated OG image would compete; a near-monochrome image with a single magenta call-out *complements* and gives the live page somewhere to be the louder voice.
+1. **id-didi-sh's full palette has three brand-spine colors (verdigris + copper + teal) plus signal hues (thread, UV, amber).** If all of them show up in a generated image, the image reads as "an Ideogram thing" rather than as "a didi.sh thing." Constraining the visual palette to gold/copper as the dominant pop, with verdigris and teal as quieter accents, forces the image to lean on *composition + line work* for legibility, not on color noise.
+2. **Comic-ink imagery scales gracefully across aspect ratios.** A 4×5 portrait and a 16×9 banner share a visual language even though they crop the scene differently; full-color illustrations tend to lose their identity when the composition changes.
+3. **It pairs cleanly with the splash's vault-mode UI.** The page itself already carries the engraved verdigris-and-copper "vault" brand experience by default. A gold/diamond-forward OG image *complements* that instead of competing with it — the OG image is what's being protected, the live page is the vault protecting it.
 
-### Subject canon — the mailroom metaphor
+### Subject canon — the safety deposit box metaphor
 
-augment-it's job, in one sentence: *records arrive from many sources, get filed into a canonical store, and are augmented along the way with provenance back to where they came from*. The OG imagery uses a literal mid-century-office metaphor for this:
+id-didi-sh's job, in one sentence: *one identity, issued once, held safe, and lent out to every consuming service without ever leaving the vault*. The OG imagery uses a literal bank-vault metaphor for this:
 
-| Augment-it abstraction | OG-image rendering |
+| id-didi-sh abstraction | OG-image rendering |
 |---|---|
-| Data sources / ingest | Canvas mailbags arriving through a mailroom hatch |
-| The six microfrontends | Period-correct file clerks (1950s office attire) |
-| The canonical record store | Tall metal filing cabinets |
-| The augmentation pass | The act of *filing* — placing each paper in the right drawer |
-| Provenance back to the source | The mailbag a paper just came out of, still visible in frame |
+| The identity service itself | The vault |
+| The `didi_session` credential | The safety deposit box |
+| The identity/account being protected | Gold coins and loose diamonds inside the box |
+| The one credential shared across consumers | The key, still in the lock |
+| The three consuming services (memos, decks, augment-it) | The row of matching boxes along the vault wall |
 
 The full-scene canonical prompt (subject only — the empty-region clause is the locked composition rule, see below):
 
-> *1950s file clerks at a mailroom hatch receiving canvas mailbags, papers spilling onto checkered floor, two clerks filing folders into tall metal cabinets*
+> *an open brass safety deposit box overflowing with gold coins and loose diamonds, set into a vault wall lined with rows of matching deposit boxes, a key in the lock*
 
 Per-format crops focus on different beats of the same scene so the family reads as one continuous visual story — see `imagery.subject_canon.per_format_focus` in the frontmatter for the per-aspect-ratio framing.
 
 ### The locked channels (don't touch per request)
 
-- **`style_reference_images`** — the canonical illustration anchor. Until the first augment-it generation produces a winner, the **bootstrap reference** is `context-vigilance-kit/splash/public/ogimage_Context-Vigilance_1024x1024.jpg` — used for style language only (the comic-ink crosshatch). The `color_palette` below displaces its sienna pop with our magenta. After the first winner ships, set `imagery.style_reference.path` to that asset and delete `imagery.bootstrap_reference`.
-- **`color_palette.members`** — five weighted entries (ink-deep, paper, magenta, iris, slate-700). Surface ink-deep dominates at 0.40 so the dark void is the default ground; paper-white carries the linework on the figure; magenta + iris carry the single-color pop accents (file tabs, key papers); slate-700 carries crosshatch mid-tones for depth.
+- **`style_reference_images`** — the canonical illustration anchor. `imagery.style_reference.path` points to id-didi-sh's own winning generation (`public/ogimage__Id-Didi-Sh--Default.jpg`), self-anchored — see "Bootstrap — the first run" below for why this project does *not* borrow the context-vigilance-kit reference.
+- **`color_palette.members`** — five weighted entries (vault-deep, copper, paper, verdigris, teal). Vault-deep dominates at 0.40 so the dark void is the default ground; copper carries the gold/brass pop (coins, box, key) at 0.25; paper-white carries linework highlights and diamond sparkle; verdigris carries the aged-brass patina accent; teal carries the cool security-thread counter-note.
 - **`style_type: AUTO`** — required whenever `style_reference_images` is uploaded. The v3 API enforces mutual exclusion: `DESIGN` / `REALISTIC` / `FICTION` are rejected when a reference is present. `AUTO` lets the reference image drive style.
 - **`magic_prompt: OFF`** — non-negotiable. With magic_prompt on, Ideogram rewrites your prompt before generation, which produces visible drift across "identical" runs.
-- **`negative_prompt`** — short on purpose. Adds `vibrant colors` and `rainbow` on top of the standard list because the multi-hex `color_palette` can otherwise get interpreted as "make it colorful" rather than "weight these colors this way." Adds `subject in top half` to actively penalize the model growing the subject up into the overlay zone (see "empty-space-first composition" below).
-- **`seed: 20250118`** — fixed. Reads as the ISO date `2025-01-18` — the foundation entry in augment-it's backfilled changelog (the Bolt-era working demo). Bump only when the visual canon itself shifts.
+- **`negative_prompt`** — short on purpose, but extended past the skill's base list with `sign, plaque, banner, poster, label` after observed drift (see "Bootstrap" below) — the multi-hex `color_palette` can otherwise get interpreted as "make it colorful" rather than "weight these colors this way." `subject in top half` actively penalizes the model growing the subject up into the overlay zone (see "empty-space-first composition" below).
+- **`seed: 20260706`** — fixed. Reads as the ISO date `2026-07-06` — the repo's first commit. Bump only when the visual canon itself shifts.
 - **`rendering_speed: QUALITY`** — for production. Use `TURBO` or `FLASH` only during prompt iteration.
 
 ### The variable channels (the only things you change)
 
 - **`prompt`** — one or two sentences total. Two ingredients only, in this exact order:
-  1. **Empty region as a first-class subject.** Lead the prompt with the empty region — declare it explicitly, give it concrete content. The augment-it pattern is `Top 1/3 of frame is empty negative space, dark dot-grid sky.` The dot-grid sky echoes the splash's own ornament layer (the `--grid-pitch` 32px dot grid) so the image and the live page share a visual cue.
-  2. **Subject** from the canon above, with per-format focus. *"Bottom 2/3 contains a 1950s file clerk reaching into an open metal filing cabinet, an overturned canvas mailbag at their feet with papers cascading onto a checkered floor."*
+  1. **Empty region as a first-class subject.** Lead the prompt with the empty region — declare it explicitly, give it concrete content. The id-didi-sh pattern is `Top 1/3 of frame is empty negative space, dark guilloche-etched sky.` The guilloche sky echoes the splash's own ornament layer (the engraved-rosette background) so the image and the live page share a visual cue.
+  2. **Subject** from the canon above, with per-format focus. *"Bottom 2/3 contains an open brass safety deposit box overflowing with gold coins and loose diamonds, a key hanging from the lock, a vault wall of matching boxes at the edges."*
 
   Target ≤220 characters total. Past that, hard composition asks start losing to subject elaboration.
 
   **Three rules that survive aspect-ratio changes:**
-  - **Lead with the empty region**, not the subject — first sentence describes what's empty and what fills that emptiness (the dot-grid sky).
+  - **Lead with the empty region**, not the subject — first sentence describes what's empty and what fills that emptiness (the guilloche-etched sky).
   - **Use explicit numeric proportions** ("top 1/3 / bottom 2/3"), never soft terms ("lower portion", "behind").
   - **Reinforce in `negative_prompt`** with the specific failure mode (`subject in top half`).
 
@@ -840,31 +829,32 @@ Per-format crops focus on different beats of the same scene so the family reads 
 
 - **`aspect_ratio`** — pick from `imagery.aspect_ratios`. Default tall (`banner_tall = 3x4`) is the priority surface — iMessage and WhatsApp chat previews unfurl this format first.
 
-### Bootstrap — the first run
+### Bootstrap — the first run (and why it skipped the shared reference)
 
-There is no canonical augment-it style reference yet. For the first generation pass:
+The usual Lossless bootstrap path borrows `context-vigilance-kit/splash/public/ogimage_Context-Vigilance_1024x1024.jpg` as a first-run style anchor for the shared comic-ink crosshatch language. **For id-didi-sh this failed**: that reference image is itself a "Keep Calm w/ Context Vigilance" poster with a large hand-lettered headline as its dominant feature, and `style_reference_images` is the strongest signal in the v3 API — it overpowered `negative_prompt` and produced garbled pseudo-text banners across the top of all 4 candidates (2026-07-07 run, `banner_tall`, seed 20260706).
 
-1. Upload `context-vigilance-kit/splash/public/ogimage_Context-Vigilance_1024x1024.jpg` as `style_reference_images`. It carries the comic-ink crosshatch language.
-2. Run the recipe with the canonical `banner` subject first (16×9). The wide framing makes the scene's spatial relationships clearest, which is what we want to lock in.
-3. Generate 4 candidates (`num_images: 4`). Pick the winner.
-4. Convert PNG → JPEG (`ffmpeg -y -i candidate-N.png -q:v 2 public/ogimage__Augment-It--Default.jpg`).
-5. Update `imagery.style_reference.path` in `DESIGN.md` to `public/ogimage__Augment-It--Default.jpg` and **delete the `bootstrap_reference` block**.
-6. Run the recipe for the other five aspect ratios using the new canonical reference. The family is now self-anchored — every subsequent run inherits the texture, density, and pop weighting from augment-it's own asset, not from context-vigilance's.
+The fix: drop the style reference for the bootstrap pass entirely and generate from `color_palette` + `prompt` alone (the skill's brand-new-site fallback), then self-anchor on the winner. Also strengthened `negative_prompt` with `sign, plaque, banner, poster, label` as a second line of defense.
+
+1. Run the recipe with **no `style_reference_images`** — `color_palette` + `prompt` only, `style_type: GENERAL`. Use the canonical `banner_tall` subject first (3×4) — the priority WhatsApp/iMessage format for this project.
+2. Generate 4 candidates (`num_images: 4`). Pick the winner.
+3. Convert PNG → JPEG (`ffmpeg -y -i candidate-N.png -q:v 2 public/ogimage__Id-Didi-Sh--Default.jpg`).
+4. Set `imagery.style_reference.path` in `DESIGN.md` to that file (already done — no `bootstrap_reference` block exists in this project's canon).
+5. Run the recipe for the other aspect ratios **with** the new canonical reference uploaded and `style_type: AUTO`. The family is now self-anchored — every subsequent run inherits the texture, density, and pop weighting from id-didi-sh's own asset.
 
 ### Preservation discipline
 
 Per the `generate-consistent-og-images` skill, two preservation layers apply to every run:
 
 - **Layer 1 — raw candidates auto-archive.** Every Ideogram call writes its four candidates into `.ideogram-candidates/<subject>-<aspect>-<YYYYMMDD-HHMMSS>/` (alongside the response JSON). The dot-prefixed parent sits outside `public/` so Astro doesn't ship raw PNGs to GitHub Pages. Timestamped per-run subdirs are never overwritten.
-- **Layer 2 — canonical JPEGs archive on replacement.** When a re-run produces a new winner for an existing format, the prior canonical `public/ogimage__Augment-It--Foo.jpg` moves to `.ogimage-archive/ogimage__Augment-It--Foo--YYYY-MM-DD.jpg` before the new file is written. The unfurler URL stays stable; the byte history is preserved.
+- **Layer 2 — canonical JPEGs archive on replacement.** When a re-run produces a new winner for an existing format, the prior canonical `public/ogimage__Id-Didi-Sh--Foo.jpg` moves to `.ogimage-archive/ogimage__Id-Didi-Sh--Foo--YYYY-MM-DD.jpg` before the new file is written. The unfurler URL stays stable; the byte history is preserved.
 
 ### Anti-patterns
 
-- **Putting brand or palette words in the prompt.** "Magenta accent, comic-style inking…" — every word competes with the actual subject. The locked channels already encode this.
+- **Putting brand or palette words in the prompt.** "Copper accent, comic-style inking…" — every word competes with the actual subject. The locked channels already encode this.
 - **Long negative prompts.** Each token in `negative_prompt` is also a competitor for attention. Stay close to the locked list.
 - **Varying `magic_prompt` or `seed` across requests in a set.** Either change is the single largest source of "why don't these match." Lock both at the project level.
-- **Subject-first framing for overlay-bearing imagery.** Saying *"clerks in the lower third"* alone is not enough. Lead with the empty region as a first-class rendered subject; the subject won't be left as residue, it has to be declared, named, and given content.
-- **Pulling a *different* subject family for one aspect ratio.** All augment-it OG imagery uses the mailroom-and-filing-clerks subject canon. Don't substitute "abstract module-federation diagram" for the square format because square is harder to compose — recrop the canonical scene instead.
+- **Subject-first framing for overlay-bearing imagery.** Saying *"the box in the lower third"* alone is not enough. Lead with the empty region as a first-class rendered subject; the subject won't be left as residue, it has to be declared, named, and given content.
+- **Pulling a *different* subject family for one aspect ratio.** All id-didi-sh OG imagery uses the safety-deposit-box-in-a-vault subject canon. Don't substitute "abstract key/lock diagram" for the square format because square is harder to compose — recrop the canonical scene instead.
 
 ## Do's and Don'ts
 
