@@ -2,7 +2,7 @@
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 
-// Landing for didi.sh — the custom-domain marketing surface, deployed on
+// Site for didi.sh — the apex marketing surface — the custom-domain marketing surface, deployed on
 // Vercel at the apex. Derived from splash/ (the GitHub Pages presence,
 // which stays put per the maintain-splash-pages convention).
 //

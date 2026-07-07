@@ -47,7 +47,7 @@ erl_crash.dump
 
 # Non-app surfaces — never ship into the release image
 /splash/
-/landing/
+/site/
 /context-v/
 /changelog/
 /scripts/

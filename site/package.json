@@ -1,9 +1,9 @@
 {
-  "name": "didi-sh-landing",
+  "name": "didi-sh-site",
   "type": "module",
   "version": "0.0.1",
   "private": true,
-  "description": "didi.sh apex landing \u2014 one login to fast-track DD-ready materials. Deployed on Vercel; derived from splash/.",
+  "description": "didi.sh apex marketing site \u2014 one login to fast-track DD-ready materials. Deployed on Vercel; derived from splash/.",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
