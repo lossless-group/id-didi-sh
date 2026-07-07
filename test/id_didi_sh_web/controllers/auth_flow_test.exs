@@ -61,6 +61,24 @@ defmodule IdDidiShWeb.AuthFlowTest do
     refute Map.has_key?(key, "d")
   end
 
+  test "the /access page: GET does not consume the token; POST redeems", %{conn: conn} do
+    user = seed_user("clicker@example.com")
+    {:ok, raw, _} = Accounts.issue_magic_link(user.primary_email)
+
+    # Scanner prefetch: GET must leave the token alive
+    conn1 = get(conn, ~p"/access?token=#{raw}")
+    assert html_response(conn1, 200) =~ "Confirm your sign-in"
+
+    # The human click: POST consumes it, sets the cookie
+    conn2 = post(build_conn(), ~p"/access", %{"token" => raw})
+    assert html_response(conn2, 200) =~ "Signed in"
+    assert is_binary(conn2.resp_cookies["didi_session"][:value])
+
+    # Reuse rejected with the error rendering
+    conn3 = post(build_conn(), ~p"/access", %{"token" => raw})
+    assert html_response(conn3, 200) =~ "invalid or expired"
+  end
+
   test "/api/me without a cookie is 401", %{conn: conn} do
     assert conn |> get(~p"/api/me") |> json_response(401)
   end

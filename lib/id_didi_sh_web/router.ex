@@ -18,6 +18,11 @@ defmodule IdDidiShWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    # The magic-link landing (emails point here). Two-step on purpose:
+    # GET renders a confirm button; only the POST consumes the token —
+    # mail-scanner prefetch can't burn a single-use link.
+    get "/access", AccessController, :show
+    post "/access", AccessController, :redeem
   end
 
   # The headless API — the contract consumers call from their own UIs.
