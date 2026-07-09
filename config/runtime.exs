@@ -116,10 +116,17 @@ end
 if config_env() == :prod do
   # The deployed identity posture: .didi.sh cookie, Secure, env-injected
   # signing key (ID_SIGNING_JWK is validated at boot by IdDidiSh.Keys).
+  #
+  # cors_origins: the first consumer beyond didi.sh's own site/ —
+  # augment.didi.sh (Build-Order Step 10, humain-vc unlock). Enumerated
+  # explicitly per Plugs.CORS's own doc — the allowlist IS the trust
+  # boundary statement, never a wildcard. Add each new *.didi.sh consumer
+  # here as it goes live (decks, memos, …).
   config :id_didi_sh, :identity,
     issuer: System.get_env("ID_ISSUER") || "https://id.didi.sh",
     cookie_domain: System.get_env("ID_COOKIE_DOMAIN") || ".didi.sh",
-    cookie_secure: true
+    cookie_secure: true,
+    cors_origins: ["https://augment.didi.sh"]
 end
 
 # Email — with RESEND_API_KEY present (Fly secret in prod; sourced .env for
