@@ -128,6 +128,28 @@ the prove script runs without reading the Swoosh mailbox at `/dev/mailbox`.
 Secrets (signing keypair, R2 credentials, email API key, OAuth client
 secrets) come from the environment — never committed, never in this repo.
 
+## Testing
+
+The suite is ExUnit (Elixir's standard test framework — no extra deps):
+
+```sh
+mix test                                                            # the whole suite
+mix test test/id_didi_sh_web/controllers/identity_contract_test.exs # just the identity contract
+```
+
+Beyond the walking-skeleton flow (`auth_flow_test.exs`), the load-bearing
+file is **`identity_contract_test.exs`** — it pins the exact contract that
+augment-it's fake id-plane test fixture mimics: a minimal JWT (`sub`/`sid`
+only, no tenancy baked in), the JWKS key that verifies a freshly-minted
+token, `/api/me` memberships, and `/api/session/refresh` re-minting an
+expired-but-authentic token while the session row lives (refusing once it's
+dead). If this contract drifts, augment-it's transport/session tests are
+testing a fiction — so this suite is what keeps the fake honest.
+
+This is **Group A** of the cross-repo test story documented in augment-it's
+[`Corpora-Builder-Harmony-Test-Registry`](../augment-it/context-v/specs/Corpora-Builder-Harmony-Test-Registry.md);
+augment-it's `pnpm test:all` runs this suite too when `mix` is on the path.
+
 ## Deploy (Fly.io → id.didi.sh)
 
 The deploy artifacts are committed: `fly.toml` (lax region, port 8080, a
