@@ -65,6 +65,9 @@ defmodule IdDidiSh.Accounts do
     |> Repo.insert()
   end
 
+  @doc "How many accounts exist. Used to assert the invite-only invariant holds."
+  def count_users, do: Repo.aggregate(User, :count, :didi_id)
+
   def memberships_for(didi_id) do
     Repo.all(from m in Membership, where: m.didi_id == ^didi_id)
   end

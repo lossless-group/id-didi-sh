@@ -34,6 +34,8 @@ defmodule IdDidiShWeb.Router do
     post "/session/refresh", SessionController, :refresh
     delete "/session", SessionController, :delete
     get "/me", MeController, :show
+    get "/workspaces", WorkspaceController, :index
+    post "/workspaces/:slug/join", WorkspaceController, :join
   end
 
   scope "/.well-known", IdDidiShWeb do
