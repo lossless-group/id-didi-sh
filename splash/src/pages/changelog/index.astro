@@ -8,8 +8,8 @@ import { formatDate, toDate } from '@lib/date';
 const entries = (await getCollection('changelog'))
   .filter((e) => e.data.publish !== false)
   .sort((a, b) => {
-    const da = toDate(a.data.date_modified ?? a.data.date_first_published ?? a.data.date_created ?? a.data.date);
-    const db = toDate(b.data.date_modified ?? b.data.date_first_published ?? b.data.date_created ?? b.data.date);
+    const da = toDate(a.data.date_modified ?? a.data.date_first_published ?? a.data.date_created ?? a.data.date ?? a.data.date_authored_current_draft ?? a.data.date_authored_initial_draft);
+    const db = toDate(b.data.date_modified ?? b.data.date_first_published ?? b.data.date_created ?? b.data.date ?? b.data.date_authored_current_draft ?? b.data.date_authored_initial_draft);
     const ta = da ? da.getTime() : 0;
     const tb = db ? db.getTime() : 0;
     if (tb !== ta) return tb - ta;
@@ -54,7 +54,7 @@ const base = import.meta.env.BASE_URL;
         ) : (
           <ul class="entry-list" data-pagefind-ignore="all" data-sort-target="changelog">
             {entries.map((entry) => {
-              const created = toDate(entry.data.date_created ?? entry.data.date);
+              const created = toDate(entry.data.date_created ?? entry.data.date ?? entry.data.date_authored_current_draft ?? entry.data.date_authored_initial_draft);
               const modified = toDate(entry.data.date_modified);
               const published = toDate(entry.data.date_first_published);
               const d = modified ?? published ?? created;

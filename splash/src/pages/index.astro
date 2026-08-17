@@ -15,7 +15,7 @@ const changelogAll = (await getCollection('changelog')).filter((e) => e.data.pub
 const contextVAll = await getCollection('context-v');
 
 const latestEntries = [...changelogAll]
-  .map((e) => ({ ...e, _t: toDate(e.data.date_modified ?? e.data.date_created ?? e.data.date)?.getTime() ?? 0 }))
+  .map((e) => ({ ...e, _t: toDate(e.data.date_modified ?? e.data.date_created ?? e.data.date ?? e.data.date_authored_current_draft ?? e.data.date_authored_initial_draft)?.getTime() ?? 0 }))
   .sort((a, b) => b._t - a._t)
   .slice(0, 3);
 
@@ -177,7 +177,7 @@ const artifacts = [
       <h2>Stamped as it ships.</h2>
       <ul class="buildlog" role="list">
         {latestEntries.map((entry) => {
-          const when = toDate(entry.data.date_modified ?? entry.data.date_created ?? entry.data.date);
+          const when = toDate(entry.data.date_modified ?? entry.data.date_created ?? entry.data.date ?? entry.data.date_authored_current_draft ?? entry.data.date_authored_initial_draft);
           const stamp = when ? when.toISOString().slice(0, 10) : '';
           return (
             <li class="buildlog__row">
