@@ -11,6 +11,10 @@ tags:
   - Reminder
   - Id-Didi-Sh
   - Context-Vigilance
+site_uuid: e196a296-2af5-4525-891e-3ca5500c5d34
+hex_code: punols
+date_authored_initial_draft: 2026-07-06
+date_authored_current_draft: 2026-07-06
 ---
 
 # The canonical spec lives in the ai-labs parent
