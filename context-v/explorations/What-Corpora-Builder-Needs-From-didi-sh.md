@@ -20,6 +20,7 @@ site_uuid: b9f6be50-8a42-4a02-8ff8-d504312b483d
 hex_code: ywp7rx
 date_authored_initial_draft: 2026-08-08
 date_authored_current_draft: 2026-08-08
+publish: true
 ---
 
 # What Corpora-Builder Needs From didi.sh

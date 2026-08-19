@@ -21,6 +21,7 @@ site_uuid: 49ebb586-9ac8-4eab-933d-14629d876507
 hex_code: rjw6lx
 date_authored_initial_draft: 2026-07-24
 date_authored_current_draft: 2026-07-24
+publish: true
 ---
 
 # Serving Secrets Server-Side as an MCP Capability Plane
