@@ -62,8 +62,6 @@ defmodule IdDidiSh.Entities do
           slug: slug,
           name: name,
           org_id: attrs[:org_id] || attrs["org_id"],
-          default_domain: attrs[:default_domain] || attrs["default_domain"],
-          default_role: attrs[:default_role] || attrs["default_role"],
           inserted_at: now,
           updated_at: now
         }

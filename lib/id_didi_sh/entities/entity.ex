@@ -12,8 +12,6 @@ defmodule IdDidiSh.Entities.Entity do
     field :slug, :string
     field :name, :string
     field :org_id, :string
-    field :default_domain, :string
-    field :default_role, :string
     timestamps(type: :utc_datetime)
   end
 

@@ -34,9 +34,7 @@ defmodule IdDidiShWeb.EntityController do
            kind: params["kind"],
            slug: params["slug"],
            name: params["name"],
-           org_id: params["org_id"],
-           default_domain: params["default_domain"],
-           default_role: params["default_role"]
+           org_id: params["org_id"]
          }) do
       {:ok, entity} ->
         # The creator is an owner of what they created. Without this an entity
@@ -172,8 +170,7 @@ defmodule IdDidiShWeb.EntityController do
       json(conn, %{
         removed: %{entity_id: entity_id, didi_id: didi_id},
         also_member_of: Enum.map(survivors, &render_entity/1),
-        disclosure:
-          disclosure_sentence(didi_id, survivors)
+        disclosure: disclosure_sentence(didi_id, survivors)
       })
     else
       {:error, status, reason} -> error(conn, status, reason)

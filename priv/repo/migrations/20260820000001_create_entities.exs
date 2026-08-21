@@ -16,9 +16,6 @@ defmodule IdDidiSh.Repo.Migrations.CreateEntities do
       # Descriptive only — grouping and breadcrumbs. NEVER consulted when
       # resolving access or credentials.
       add :org_id, :string
-      # Self-signup convenience only; a membership row is always the authority.
-      add :default_domain, :string
-      add :default_role, :string
       timestamps(type: :utc_datetime)
     end
 

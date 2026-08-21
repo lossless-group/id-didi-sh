@@ -4,7 +4,6 @@ defmodule IdDidiSh.EntitiesTest do
   alias IdDidiSh.Accounts
   alias IdDidiSh.Entities
   alias IdDidiSh.Entities.Entity
-  alias IdDidiSh.Repo
 
   defp seed_user(email \\ "alice@example.com") do
     {:ok, user} = Accounts.create_user(%{primary_email: email, name: "Alice"})
@@ -13,18 +12,6 @@ defmodule IdDidiSh.EntitiesTest do
 
   defp seed_entity(slug, kind \\ "project") do
     {:ok, entity} = Entities.create_entity(%{kind: kind, slug: slug, name: String.upcase(slug)})
-    entity
-  end
-
-  defp seed_domain_entity(slug, domain) do
-    {:ok, entity} =
-      Entities.create_entity(%{
-        kind: "organization",
-        slug: slug,
-        name: String.upcase(slug),
-        default_domain: domain
-      })
-
     entity
   end
 
@@ -144,46 +131,34 @@ defmodule IdDidiSh.EntitiesTest do
     end
   end
 
-  # The workspaces model (retired with `hygene/test-coverage`) guarded these
-  # with five tests. `entities` inherited `default_domain` as a COLUMN but not
-  # the guards: it is written once on create and never read again, and
-  # `effective_role/2` consults only lending and the membership row.
-  #
-  # That is correct, and nothing was asserting it. These tests are what keep it
-  # true — the failure mode is a future reader seeing the column and wiring it
-  # into `effective_role/2`, which reintroduces domain-derived membership and
-  # makes an advisor structurally inexpressible.
-  describe "default_domain is inert (the advisor invariant)" do
-    test "a matching email domain confers no access by itself" do
-      entity = seed_domain_entity("acme", "acme.com")
-      user = seed_user("bob@acme.com")
-
-      # No membership row was ever created. The domain must not stand in for one.
-      assert Entities.get_membership(entity.id, user.didi_id) == nil
-      assert Entities.effective_role(entity.id, user.didi_id) == nil
-      assert Entities.list_entities_for(user.didi_id) == []
+  # The retired workspaces model derived membership from an email domain via a
+  # `default_domain` column, guarded by five tests. `entities` briefly inherited
+  # the column without the guards. It has now been dropped entirely — the
+  # cheapest guard is the field not existing.
+  describe "the advisor invariant (no domain-derived membership)" do
+    test "entities carry no default_domain or default_role" do
+      # A schema assertion, same shape as the parent_id one above. Derive
+      # membership from an email domain and you have built a system that
+      # structurally cannot express an advisor — someone at another company who
+      # holds a role by explicit grant. If either field comes back, this fails
+      # loudly rather than the invariant eroding quietly.
+      refute :default_domain in Entity.__schema__(:fields)
+      refute :default_role in Entity.__schema__(:fields)
     end
 
-    test "an advisor at another company holds a role, and moving the domain revokes nobody" do
-      entity = seed_domain_entity("acme", "acme.com")
+    test "an advisor at another company holds a role by explicit grant" do
+      entity = seed_entity("acme", "organization")
       advisor = seed_user("dana@other-firm.com")
+      insider = seed_user("bob@acme.com")
 
-      # Membership is an explicit grant; the granted person's address is
-      # irrelevant to it.
       {:ok, _} = Entities.add_member(entity.id, advisor.didi_id, "editor")
+
+      # The granted person's address is irrelevant to the grant...
       assert Entities.effective_role(entity.id, advisor.didi_id) == "editor"
-
-      entity
-      |> Ecto.Changeset.change(default_domain: "somewhere-else.com")
-      |> Repo.update!()
-
-      assert Entities.effective_role(entity.id, advisor.didi_id) == "editor"
-
-      Entities.get_entity(entity.id)
-      |> Ecto.Changeset.change(default_domain: nil)
-      |> Repo.update!()
-
-      assert Entities.effective_role(entity.id, advisor.didi_id) == "editor"
+      # ...and sharing a name with the entity confers nothing without a row.
+      assert Entities.get_membership(entity.id, insider.didi_id) == nil
+      assert Entities.effective_role(entity.id, insider.didi_id) == nil
+      assert Entities.list_entities_for(insider.didi_id) == []
     end
   end
 
