@@ -8,6 +8,7 @@ defmodule IdDidiSh.Application do
   @impl true
   def start(_type, _args) do
     children = [
+      IdDidiSh.Vault,
       IdDidiShWeb.Telemetry,
       IdDidiSh.Repo,
       {Ecto.Migrator,

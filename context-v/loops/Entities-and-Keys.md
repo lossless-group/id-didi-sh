@@ -131,3 +131,43 @@ that the invite is single-use.
 **Stale comment corrected:** `MagicLinkNotifier` said the sender must stay
 `onboarding@resend.dev` until didi.sh was verified in Resend. It is verified —
 self-host-stack already sends client mail from `no-reply@didi.sh`.
+
+## Increment 3 — credentials, encrypted at rest — ✅ PASSED 2026-08-20
+
+**Built:** `cloak_ecto` + `IdDidiSh.Vault` (AES-256-GCM) + `Encrypted.Binary`
+type; migration `20260820000003_create_credentials` with all four tables
+(`credentials`, `credential_cascades`, `credential_loans`, `credential_usage`);
+`IdDidiSh.Credentials` create / list / revoke; 12 tests. Suite 55 → **65 passed**.
+
+**Gate:** a credential round-trips, and the raw value appears in no API response.
+Asserted the strong way — by reading the raw SQLite column with `Repo.query/2`,
+bypassing the Ecto type that would decrypt it, and confirming the secret is not
+in those bytes. Also asserted that a rendered list, JSON-encoded, contains
+neither of two secrets.
+
+**Decided in flight:**
+
+1. **`render/1` is built by naming safe fields, not by dropping unsafe ones.** A
+   future column is invisible until someone adds it to the serializer — the
+   failure direction you want. A blocklist leaks by default; an allowlist hides
+   by default.
+2. **Revocation keeps the row.** Deleting a credential would orphan its
+   `credential_usage` history, and that history is the lender's record of what
+   their card paid for. The key stops working; the evidence stays.
+3. **Only the owner may revoke** — `{:error, :not_the_owner}` otherwise. It is
+   their key, and an entity admin taking it back is not a thing that can happen.
+4. **Short values mask entirely** (`····`) rather than showing four of six
+   characters.
+5. **The dev/test encryption key is deterministic**, so the suite needs no
+   environment setup, and `Vault.init/1` raises in prod when
+   `CREDENTIAL_ENCRYPTION_KEY` is missing. The fallback is unreachable where it
+   would matter.
+6. **All four tables landed in one migration**, per the plan, even though
+   increment 3 only uses `credentials`. The lending tables arrive in increment 4
+   with no further schema change.
+
+**Not shipped:** this is local only. Per
+[[Storage-and-Backups-for-id-didi-sh]], increment 3 must not reach production
+before the Turso cutover, so no lent credential is ever written to the
+unreplicated Fly volume. Writing the code does not breach that; deploying it
+would.

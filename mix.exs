@@ -60,6 +60,10 @@ defmodule IdDidiSh.MixProject do
        depth: 1},
       {:swoosh, "~> 1.16"},
       {:jose, "~> 1.11"},
+      # Encryption at rest for lent credentials. Hand-rolling this is the one
+      # place thrift is indefensible; Cloak gives a transparent Ecto type and a
+      # documented key-rotation path.
+      {:cloak_ecto, "~> 1.3"},
       {:req, "~> 0.5"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
