@@ -1,397 +1,368 @@
 ---
 version: alpha
-name: Augment It — Splash
+name: didi.sh — Splash
 description: >-
-  Design system for the augment-it splash site. Three-mode contract
-  (vibrant-default / dark / light) with a magenta-violet-iris brand spine
-  pulled straight from the augment-it wordmark gradient, monospace-forward
-  typography (JetBrains Mono display + Space Grotesk body), and a
-  module-federation-manifest aesthetic — dot-grid ornament, corner-tick
-  framed cards, version-chip ledger meta. Tokens mirror the CSS custom
-  properties in src/styles/theme.css — that file remains the runtime
-  source of truth; this DESIGN.md is the human- and agent-readable
-  contract.
+  Design system for the id-didi-sh splash site. Three-mode contract
+  (dark-default / light / vibrant) with a verdigris-copper-teal brand
+  spine — the currency-engraving palette — over a green-black vault
+  axis, Space Grotesk display over IBM Plex Sans and Mono, and a
+  credential posture: the identity service dresses like an identity
+  document. Guilloche rosette ornament, stamp chrome for statuses,
+  mono-forward data fields, terse datasheet voice. Tokens mirror the
+  CSS custom properties in src/styles/theme.css — that file remains
+  the runtime source of truth; this DESIGN.md is the human- and
+  agent-readable contract.
 
 # ── Tier-1 raw values — mode-invariant ─────────────────────────────────
-# These are the primitives. Semantic tokens (below) map onto these and
-# rebind per <html data-mode="...">. The vibrant-mode bindings are the
-# defaults; dark and light bindings live under modes: below.
+# These are the primitives, declared once on :root. Semantic tokens
+# (below) map onto these and rebind per <html data-mode="...">. The
+# DARK bindings are the defaults — dark is the vault, and the vault is
+# where this service lives. Light and vibrant live under modes: below.
 colors:
-  # ── Brand spine — straight from the augment-it wordmark gradient ────
-  # Wordmark linear-gradient stops: B62DC2 → 794AC3 → CB5BDE → 7D32C6 →
-  # C157F2 → 6A16AB. The three pairs below name them.
-  magenta: "#cb5bde"
-  magenta-deep: "#b62dc2"
-  magenta-soft: "#efb6f7"
-  violet: "#794ac3"
-  violet-deep: "#6a16ab"
-  violet-soft: "#b9a0ee"
-  iris: "#c157f2"
-  iris-deep: "#7d32c6"
-  iris-soft: "#e0b3ff"
+  # ── Brand spine — the intaglio inks ─────────────────────────────────
+  # Currency engraving, not a wordmark gradient. Verdigris is the
+  # oxidized-copper green of banknote ink; copper is the plate it was
+  # struck from; teal carries the security thread.
+  verdigris: "#4ecf95"
+  verdigris-deep: "#1f9a63"
+  verdigris-soft: "#b5eed3"
+  copper: "#d29a62"
+  copper-deep: "#a86f3d"
+  copper-soft: "#eed3b2"
+  teal: "#4fbfae"
+  teal-deep: "#2a7f74"
+  teal-soft: "#b8e8e1"
 
-  # ── Signal hues — off-spine, used for status / mode-specific threads
-  cyan: "#4ad7ff"          # "live" / status-thread in vibrant mode
-  amber: "#ffb547"          # "wip" / Archive-Backfill / warm warning
-  lime: "#9ce86b"           # "thread" in dark mode
+  # ── Signal hues — off-spine, status and mode-specific roles ─────────
+  thread: "#55e0d2"        # the security thread woven through the note
+  uv: "#9d7bff"            # fluoresces under the vibrant lamp
+  uv-soft: "#c9b3ff"
+  amber: "#ffb547"         # warm warning
 
-  # ── Editorial neutrals — the ink-pad axis ───────────────────────────
-  ink-deep: "#0a0712"
-  ink: "#14101e"
-  ink-soft: "#1f1830"
-  charcoal: "#251d3a"
-  slate-700: "#3a3052"
-  slate-500: "#6b5f86"
-  slate-400: "#8a7da3"
-  slate-300: "#aaa0c0"
-  slate-200: "#cdc4de"
-  slate-100: "#e7e2ef"
-  paper: "#f7f4fa"
-  paper-soft: "#efe9f4"
-  paper-deep: "#e2d8eb"
+  # ── Editorial neutrals — the vault-ink axis ─────────────────────────
+  # Green-black, not blue-black. This is the single most load-bearing
+  # decision separating didi.sh from its sibling splashes.
+  vault-deep: "#060a08"
+  vault: "#0b110e"
+  vault-soft: "#121a16"
+  moss-800: "#1a2620"
+  sage-700: "#33443c"
+  sage-500: "#5c7268"
+  sage-400: "#7a9186"
+  sage-300: "#9db1a7"
+  sage-200: "#c2d2c9"
+  sage-100: "#e0eae4"
+  paper: "#f3f6f2"
+  paper-soft: "#e9efe8"
+  paper-deep: "#dbe5da"
 
-  # ── Semantic — vibrant-mode bindings (the defaults) ─────────────────
-  # When data-mode="vibrant" (or unset), these are the active values.
-  # See modes: below for dark / light overrides.
-  surface-base: "{colors.ink-deep}"        # body background
-  surface-soft: "{colors.ink}"             # next-shade-up surface
-  surface-elevated: "{colors.charcoal}"    # palette window, modals, header backdrop
-  surface-card: "rgba(31, 24, 48, 0.78)"   # cards (slightly translucent ink-soft)
-  surface-code: "#060410"                  # code blocks, version chips bg
+  # ── Semantic — DARK-mode bindings (the defaults) ────────────────────
+  # When data-mode="dark" (or unset), these are the active values.
+  # See modes: below for light / vibrant overrides.
+  bg: "{colors.vault-deep}"
+  bg-soft: "{colors.vault}"
+  bg-elevated: "{colors.moss-800}"
+  bg-card: "rgba(18, 26, 22, 0.82)"
+  bg-code: "#040705"
 
-  on-surface: "#f6eefb"                    # primary text
-  on-surface-soft: "{colors.slate-200}"    # secondary text
-  on-surface-dim: "{colors.slate-400}"     # tertiary / metadata
-  on-surface-dimmer: "#786994"             # weakest
-  on-surface-faint: "#58496f"              # almost-invisible (timestamps)
+  text: "#ecf3ee"
+  text-soft: "{colors.sage-200}"
+  text-dim: "{colors.sage-400}"
+  text-dimmer: "#64796e"
+  text-faint: "#465850"
 
-  primary: "{colors.magenta}"              # primary accent (vibrant default)
-  primary-soft: "{colors.magenta-soft}"    # hover / glow variant
-  accent-warm: "{colors.iris}"             # secondary accent
-  accent-hot: "{colors.magenta-deep}"      # deepest accent (pressed states)
+  accent: "{colors.verdigris}"
+  accent-soft: "{colors.verdigris-soft}"
+  accent-warm: "{colors.copper}"
+  accent-hot: "{colors.verdigris-deep}"
 
-  thread: "{colors.cyan}"                  # "live" status-thread color
-  thread-soft: "#a8ecff"
+  thread-semantic: "{colors.thread}"
+  thread-soft: "#aef0e9"
 
-  border: "rgba(203, 91, 222, 0.16)"       # default border (magenta @ 16%)
-  border-strong: "rgba(203, 91, 222, 0.36)"# pill borders, kbd borders
-  border-accent: "rgba(193, 87, 242, 0.62)"# hover / focus borders (iris @ 62%)
-
-  # ── Archive marker (off-spine; used to tint archived eras / cards) ──
-  archive: "{colors.amber}"
+  border: "rgba(78, 207, 149, 0.14)"
+  border-strong: "rgba(78, 207, 149, 0.32)"
+  border-accent: "rgba(78, 207, 149, 0.58)"
 
 typography:
-  # Two families. Both ride together — JetBrains Mono for anything that
-  # should feel "engineered" (display, mono, eyebrows, code chips, button
-  # labels in some places) and Space Grotesk for sans body and headings.
-  # The display family is monospace on purpose — augment-it is a data
-  # tool, and the splash should read like one.
-  display-hero:
+  # Three families. Space Grotesk does engraved-caps headline duty,
+  # IBM Plex Sans is the institutional document body, and IBM Plex Mono
+  # is the data field on the credential. The mono is not decorative —
+  # it is what makes key IDs, JWKS paths, and cascade records legible.
+  display:
     fontFamily: Space Grotesk
-    fontSize: 3rem                  # clamp(2rem, 4.6vw, 3rem) at top
-    fontWeight: 700
+    fontWeight: 600
     lineHeight: 1.08
-    letterSpacing: -0.02em
-  headline-lg:
-    fontFamily: Space Grotesk
-    fontSize: 2.4rem                # used on /changelog and /context-v list pages h1
-    fontWeight: 700
-    lineHeight: 1.1
-    letterSpacing: -0.018em
-  headline-md:
-    fontFamily: Space Grotesk
-    fontSize: 1.4rem                # entry-list titles, module-card titles
-    fontWeight: 700
-    lineHeight: 1.15
-    letterSpacing: -0.012em
-  headline-sm:
-    fontFamily: Space Grotesk
-    fontSize: 1.18rem
-    fontWeight: 700
-    lineHeight: 1.2
-    letterSpacing: -0.01em
-  body-lg:
-    fontFamily: Space Grotesk
-    fontSize: 1.1rem                # manifest tagline, page ledes
+    letterSpacing: "-0.015em"
+  sans:
+    fontFamily: IBM Plex Sans
     fontWeight: 400
-    lineHeight: 1.55
-  body-md:
-    fontFamily: Space Grotesk
-    fontSize: 1rem
-    fontWeight: 400
+    fontSize: 16px
     lineHeight: 1.6
-  body-sm:
-    fontFamily: Space Grotesk
-    fontSize: 0.92rem               # module-card body / prose preview
-    fontWeight: 400
-    lineHeight: 1.55
-  mono-md:
-    fontFamily: JetBrains Mono
-    fontSize: 0.85rem               # pipeline rail, sort controls
-    fontWeight: 500
-    lineHeight: 1.4
-  mono-sm:
-    fontFamily: JetBrains Mono
-    fontSize: 0.72rem
-    fontWeight: 500
-    lineHeight: 1.3
-    letterSpacing: 0.04em
+  mono:
+    fontFamily: IBM Plex Mono
   label-eyebrow:
-    fontFamily: JetBrains Mono
+    fontFamily: IBM Plex Mono
     fontSize: 0.72rem
-    fontWeight: 500
-    lineHeight: 1
-    letterSpacing: 0.18em
+    letterSpacing: "0.22em"
+    textTransform: uppercase
+  label-folio:
+    fontFamily: IBM Plex Mono
+    fontSize: 0.72rem
+    letterSpacing: "0.18em"
+    textTransform: uppercase
   label-pill:
-    fontFamily: JetBrains Mono
+    fontFamily: IBM Plex Mono
     fontSize: 0.7rem
-    fontWeight: 500
-    lineHeight: 1
-    letterSpacing: 0.06em
+    letterSpacing: "0.06em"
+  label-stamp:
+    fontFamily: IBM Plex Mono
+    fontSize: 0.66rem
+    fontWeight: 600
+    letterSpacing: "0.16em"
+    textTransform: uppercase
   label-version:
-    fontFamily: JetBrains Mono
-    fontSize: 0.66rem               # ver-chip
-    fontWeight: 500
-    lineHeight: 1
-    letterSpacing: 0.04em
+    fontFamily: IBM Plex Mono
+    fontSize: 0.66rem
+    letterSpacing: "0.04em"
 
 rounded:
-  # Squarer than memopop and content-farm; the "module manifest" feel
-  # wants edges. Pills stay round.
-  sm: 2px      # ver-chip, chip, from-tag, kbd
-  md: 4px      # btn, cards (most), input
-  lg: 6px      # search-compact panel, manifest-card variant
-  xl: 10px    # hero panels, large containers
-  full: 9999px # status pills, search-compact trigger, mode-toggle items
+  # Documents are square. Passports, banknotes, and ID cards have
+  # hard corners; only the stamps and status pills are round.
+  sm: 2px      # chip, ver-chip, from-tag, stamp, folio chip
+  md: 3px      # btn
+  lg: 5px
+  xl: 8px
+  pill: 999px  # status pills
 
 spacing:
   base: 1rem
-  "1": 0.25rem      # 4px
-  "2": 0.5rem       # 8px
-  "3": 0.75rem      # 12px
-  "4": 1rem         # 16px
-  "5": 1.25rem      # 20px
-  "6": 1.5rem       # 24px
-  "8": 2rem         # 32px
-  "10": 2.5rem      # 40px
-  "12": 3rem        # 48px — section gap
-  "16": 4rem        # 64px — hero block padding
-  "20": 5rem        # 80px
-  "24": 6rem        # 96px — site-footer top margin
+  "1": 0.25rem
+  "2": 0.5rem
+  "3": 0.75rem
+  "4": 1rem
+  "5": 1.25rem
+  "6": 1.5rem      # container gutter
+  "8": 2rem
+  "10": 2.5rem
+  "12": 3rem
+  "16": 4rem
+  "20": 5rem
+  "24": 6rem
 
   # Layout-named tokens
   container-max: 1180px
   container-narrow-max: 760px
-  container-padding: 24px           # {spacing.6}
-  grid-pitch: 32px                  # dot-grid ornament pitch (--grid-pitch)
-  header-height: 64px
+  container-padding: 24px        # {spacing.6}
+  guilloche-pitch: 11px          # engraved ring spacing (--guilloche-pitch)
+
+motion:
+  transition-fast: "160ms ease"
+  transition-mid: "320ms ease"
+  reduced-motion: "all transitions and animations disabled under prefers-reduced-motion"
 
 components:
   # ── Pill (status indicator) ───────────────────────────────────────────
   pill:
-    backgroundColor: "rgba(246, 238, 251, 0.04)"   # color-mix of on-surface
-    textColor: "{colors.on-surface-soft}"
+    backgroundColor: "color-mix(in oklab, {colors.text} 4%, transparent)"
+    textColor: "{colors.text-soft}"
     typography: "{typography.label-pill}"
-    rounded: "{rounded.full}"
+    rounded: "{rounded.pill}"
     padding: "4px 10px"
     border: "1px solid {colors.border-strong}"
-  pill-stable:
-    textColor: "{colors.thread}"
-    backgroundColor: "rgba(74, 215, 255, 0.12)"
+  pill-live:
+    # data-status: Active | Stable | live | Implementing
+    textColor: "{colors.thread-semantic}"
+    backgroundColor: "color-mix(in oklab, {colors.thread-semantic} 12%, transparent)"
+    border: "1px solid color-mix(in oklab, {colors.thread-semantic} 50%, transparent)"
   pill-beta:
-    textColor: "{colors.primary}"
-    backgroundColor: "rgba(203, 91, 222, 0.12)"
+    textColor: "{colors.accent}"
+    backgroundColor: "color-mix(in oklab, {colors.accent} 12%, transparent)"
+    border: "1px solid color-mix(in oklab, {colors.accent} 50%, transparent)"
   pill-alpha:
+    # data-status: Alpha | Experiment | planned | Draft
     textColor: "{colors.accent-warm}"
-    backgroundColor: "rgba(193, 87, 242, 0.12)"
+    backgroundColor: "color-mix(in oklab, {colors.accent-warm} 12%, transparent)"
+    border: "1px solid color-mix(in oklab, {colors.accent-warm} 50%, transparent)"
 
-  # ── ver-chip (semver / manifest-version badge) ───────────────────────
+  # ── Stamp — the credential posture's signature chrome ─────────────────
+  stamp:
+    border: "2px double currentColor"
+    rounded: "{rounded.sm}"
+    typography: "{typography.label-stamp}"
+    padding: "3px 10px"
+    textColor: "{colors.thread-semantic}"
+    backgroundColor: "color-mix(in oklab, currentColor 6%, transparent)"
+    transform: "rotate(-2deg)"
+    inks: "data-ink=copper | accent | dim rebind currentColor"
+
+  # ── from-tag (provenance marker, with a filled dot) ───────────────────
+  from-tag:
+    textColor: "{colors.thread-semantic}"
+    backgroundColor: "color-mix(in oklab, {colors.thread-semantic} 12%, transparent)"
+    border: "1px solid color-mix(in oklab, {colors.thread-semantic} 35%, transparent)"
+    rounded: "{rounded.sm}"
+    padding: "3px 9px"
+    ornament: "6px filled circle in thread, via ::before"
+
+  # ── chip (inline code / literal) ──────────────────────────────────────
+  chip:
+    backgroundColor: "{colors.bg-code}"
+    border: "1px solid {colors.border}"
+    textColor: "{colors.text-soft}"
+    rounded: "{rounded.sm}"
+    padding: "2px 7px"
+    fontSize: "0.82em"
+
+  # ── ver-chip (semver badge) ───────────────────────────────────────────
   ver-chip:
-    backgroundColor: "rgba(203, 91, 222, 0.08)"
-    textColor: "{colors.primary}"
+    textColor: "{colors.accent}"
+    border: "1px solid color-mix(in oklab, {colors.accent} 36%, transparent)"
+    backgroundColor: "color-mix(in oklab, {colors.accent} 8%, transparent)"
     typography: "{typography.label-version}"
     rounded: "{rounded.sm}"
     padding: "1px 6px"
-    border: "1px solid rgba(203, 91, 222, 0.36)"
 
-  # ── chip (inline code-styled tag for paths / syntaxes) ───────────────
-  chip:
-    backgroundColor: "{colors.surface-code}"
-    textColor: "{colors.on-surface-soft}"
-    typography: "{typography.mono-md}"
-    rounded: "{rounded.sm}"
-    padding: "2px 7px"
-    border: "1px solid {colors.border}"
-
-  # ── from-tag (provenance / submodule-origin tag) ─────────────────────
-  from-tag:
-    backgroundColor: "rgba(74, 215, 255, 0.12)"
-    textColor: "{colors.thread}"
-    typography: "{typography.mono-sm}"
-    rounded: "{rounded.sm}"
-    padding: "3px 9px"
-    border: "1px solid rgba(74, 215, 255, 0.35)"
-
-  # ── btn (default / ghost) ────────────────────────────────────────────
-  btn:
-    backgroundColor: "{colors.surface-elevated}"
-    textColor: "{colors.on-surface}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.md}"
-    padding: "10px 18px"
-    border: "1px solid {colors.border-strong}"
-  btn-primary:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.surface-base}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.md}"
-    padding: "10px 18px"
-
-  # ── module (FeatureCard) — the corner-tick framed primary card ──────
-  module:
-    backgroundColor: "{colors.surface-card}"
-    textColor: "{colors.on-surface}"
-    rounded: "{rounded.md}"
-    padding: "{spacing.6}"
-    border: "1px solid {colors.border}"
-    # Corner ticks: 10px L-shapes anchored at each corner via absolutely-
-    # positioned divs with 2px borders in {colors.primary}.
-    cornerTickColor: "{colors.primary}"
-    cornerTickSize: "10px"
-  module-featured:
-    backgroundColor: "{colors.surface-card}"
-    textColor: "{colors.on-surface}"
-    rounded: "{rounded.md}"
-    padding: "{spacing.6}"
-    border: "1px solid rgba(203, 91, 222, 0.42)"
-    # Adds a "Featured" pill at top-left in primary color, surface-base text
-
-  # ── search-compact (header search popover) ───────────────────────────
-  search-compact-trigger:
-    backgroundColor: "rgba(246, 238, 251, 0.04)"
-    textColor: "{colors.on-surface-soft}"
-    typography: "{typography.mono-sm}"
-    rounded: "{rounded.full}"
-    padding: "6px 12px 6px 10px"
-    border: "1px solid {colors.border-strong}"
-  search-compact-panel:
-    backgroundColor: "{colors.surface-elevated}"
-    textColor: "{colors.on-surface}"
-    rounded: "{rounded.lg}"
-    padding: "{spacing.4}"
-    border: "1px solid {colors.border-strong}"
-
-  # ── mode-toggle (vibrant / dark / light selector) ───────────────────
-  mode-toggle:
-    backgroundColor: "{colors.surface-elevated}"
-    rounded: "{rounded.md}"
-    padding: "3px"
-    border: "1px solid {colors.border-strong}"
-  mode-toggle-button:
-    backgroundColor: transparent
-    textColor: "{colors.on-surface-dim}"
-    rounded: "{rounded.sm}"
-    size: "32px"
-  mode-toggle-button-active:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.surface-base}"
-
-  # ── sort-controls (per-page list ordering, header for /changelog & /context-v) ──
-  sort-controls:
-    backgroundColor: "{colors.surface-elevated}"
-    typography: "{typography.mono-md}"
-    rounded: "{rounded.md}"
-    padding: "12px 16px"
-    border: "1px solid {colors.border}"
-  sort-controls-chip:
-    backgroundColor: transparent
-    textColor: "{colors.on-surface-dim}"
-    typography: "{typography.mono-sm}"
-    rounded: "{rounded.sm}"
-    padding: "4px 10px"
-  sort-controls-chip-active:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.surface-base}"
-
-  # ── pipeline-rail (the six MFE flow on the splash index) ─────────────
-  pipeline-rail:
-    backgroundColor: "rgba(74, 215, 255, 0.04)"
-    typography: "{typography.mono-md}"
-    rounded: "{rounded.md}"
-    padding: "16px 20px"
-    border: "1px solid rgba(74, 215, 255, 0.25)"
-  pipeline-step:
-    backgroundColor: "rgba(203, 91, 222, 0.10)"
-    textColor: "{colors.on-surface}"
-    typography: "{typography.mono-md}"
-    rounded: "{rounded.sm}"
-    padding: "4px 10px"
-    border: "1px solid rgba(203, 91, 222, 0.30)"
-
-  # ── folio (manuscript-style section marker; data-num as a chip) ─────
+  # ── folio (section marker: "SEC.02 · THE SERVICES") ───────────────────
   folio:
-    typography: "{typography.label-eyebrow}"
-    textColor: "{colors.on-surface-dim}"
-    # ::before renders data-num as a small bordered chip in primary
-    markerColor: "{colors.primary}"
+    typography: "{typography.label-folio}"
+    textColor: "{colors.text-dim}"
+    numberChip:
+      content: "attr(data-num)"
+      textColor: "{colors.accent}"
+      border: "1px solid {colors.border-accent}"
+      backgroundColor: "color-mix(in oklab, {colors.accent} 8%, transparent)"
+      rounded: "{rounded.sm}"
+      padding: "1px 6px"
+
+  # ── btn ───────────────────────────────────────────────────────────────
+  btn:
+    backgroundColor: "{colors.bg-elevated}"
+    textColor: "{colors.text}"
+    border: "1px solid {colors.border-strong}"
+    rounded: "{rounded.md}"
+    padding: "10px 18px"
+    fontFamily: IBM Plex Sans
+    fontSize: 0.92rem
+    fontWeight: 600
+    hover: "border-color -> {colors.accent}"
+  btn-primary:
+    backgroundColor: "{colors.accent}"
+    textColor: "{colors.bg}"
+    border: "1px solid {colors.accent}"
+    hover: "background + border -> {colors.accent-soft}"
+
+  # ── gradient-text ─────────────────────────────────────────────────────
+  gradient-text:
+    background: "{gradients.thread}"
+    clip: text
+
+gradients:
+  # The security thread, rendered as a 110-degree sweep. Rebinds per mode.
+  thread: "linear-gradient(110deg, {colors.verdigris} 0%, {colors.teal} 48%, {colors.copper} 100%)"
 
 # ─── modes: extension ──────────────────────────────────────────────────
 # Off-spec extension (Stitch spec accepts unknown top-level keys). Each
 # mode rebinds the semantic tokens above; tier-1 values stay constant.
-# data-mode attribute on <html> drives this; the pre-paint script in
-# BaseLayout.astro reads `augment-it-splash-mode` from localStorage and
-# applies it before first paint to avoid FOUC.
+# The data-mode attribute on <html> drives this. BaseLayout.astro ships
+# data-mode="dark" in the markup and its pre-paint inline script reads
+# `id-didi-sh-splash-mode` from localStorage, applying the stored choice
+# before first paint to avoid FOUC.
 modes:
-  vibrant:
-    # Default. The semantic bindings in colors: above ARE the vibrant
-    # bindings. Listed here for completeness.
-    label: "demo shop"
-    surface-base: "{colors.ink-deep}"
-    surface-soft: "{colors.ink}"
-    surface-elevated: "{colors.charcoal}"
-    surface-card: "rgba(31, 24, 48, 0.78)"
-    on-surface: "#f6eefb"
-    primary: "{colors.magenta}"
-    accent-warm: "{colors.iris}"
-    thread: "{colors.cyan}"
   dark:
-    label: "operator"
-    surface-base: "{colors.ink}"
-    surface-soft: "{colors.ink-soft}"
-    surface-elevated: "{colors.charcoal}"
-    surface-card: "rgba(31, 24, 48, 0.72)"
-    on-surface: "#ece4f5"
-    primary: "{colors.violet-soft}"
-    accent-warm: "{colors.magenta-soft}"
-    thread: "{colors.lime}"
+    # Default. The semantic bindings in colors: above ARE the dark
+    # bindings. Listed here for completeness.
+    label: "the vault"
+    posture: "engraved verdigris + copper on deep green-black; banknote intaglio"
+    color-scheme: dark
+    bg: "{colors.vault-deep}"
+    bg-soft: "{colors.vault}"
+    bg-elevated: "{colors.moss-800}"
+    bg-card: "rgba(18, 26, 22, 0.82)"
+    text: "#ecf3ee"
+    accent: "{colors.verdigris}"
+    accent-warm: "{colors.copper}"
+    thread-semantic: "{colors.thread}"
+    gradient-thread: "linear-gradient(110deg, {colors.verdigris} 0%, {colors.teal} 48%, {colors.copper} 100%)"
   light:
-    label: "ledger"
-    surface-base: "{colors.paper}"
-    surface-soft: "{colors.paper-soft}"
-    surface-elevated: "#ffffff"
-    surface-card: "rgba(255, 255, 255, 0.92)"
-    on-surface: "{colors.ink}"
-    primary: "{colors.violet-deep}"
-    accent-warm: "{colors.magenta-deep}"
-    thread: "#2a8f4a"
+    label: "security paper"
+    posture: "pale green-white stock, engraved ink"
+    color-scheme: light
+    bg: "{colors.paper}"
+    bg-soft: "{colors.paper-soft}"
+    bg-elevated: "#ffffff"
+    bg-card: "rgba(255, 255, 255, 0.92)"
+    text: "#14201a"
+    text-soft: "{colors.sage-700}"
+    text-dim: "{colors.sage-500}"
+    accent: "{colors.verdigris-deep}"
+    accent-soft: "#167a4d"
+    accent-warm: "{colors.copper-deep}"
+    accent-hot: "{colors.verdigris}"
+    thread-semantic: "{colors.teal-deep}"
+    thread-soft: "#58a89d"
+    border: "rgba(20, 32, 26, 0.12)"
+    border-strong: "rgba(20, 32, 26, 0.24)"
+    border-accent: "rgba(31, 154, 99, 0.42)"
+    gradient-thread: "linear-gradient(110deg, {colors.verdigris-deep} 0%, {colors.teal-deep} 48%, {colors.copper-deep} 100%)"
+  vibrant:
+    label: "UV lamp"
+    posture: >-
+      the blacklight check — hidden security features fluoresce violet
+      while the verdigris thread stays lit. DARK-BASED, per the
+      three-mode contract: the surface is near-black violet, never paper.
+    color-scheme: dark
+    bg: "#07060f"
+    bg-soft: "#0c0a17"
+    bg-elevated: "#17132a"
+    bg-card: "rgba(20, 16, 40, 0.80)"
+    bg-code: "#050410"
+    text: "#f0ecfb"
+    text-soft: "#cfc6e8"
+    text-dim: "#9187b3"
+    text-dimmer: "#6d6390"
+    text-faint: "#4e4570"
+    accent: "{colors.uv}"
+    accent-soft: "{colors.uv-soft}"
+    accent-warm: "{colors.thread}"
+    accent-hot: "#7e54f0"
+    thread-semantic: "#55f0a6"
+    thread-soft: "#b2f9d4"
+    border: "rgba(157, 123, 255, 0.18)"
+    border-strong: "rgba(157, 123, 255, 0.38)"
+    border-accent: "rgba(157, 123, 255, 0.62)"
+    gradient-thread: "linear-gradient(110deg, {colors.uv} 0%, #55f0a6 55%, {colors.thread} 100%)"
 
 # ─── ornament: extension ───────────────────────────────────────────────
 # The fixed `.bg-mesh` element painted behind every page. Three radial
-# gradients per mode (declared via --gradient-mesh-1/2/3) plus a dot grid
-# from a single radial pseudo-element at the page-wide --grid-pitch.
+# mesh gradients per mode, plus TWO guilloche rosettes — the engraved
+# concentric rings that banknote and passport corners carry. Pure CSS:
+# repeating-radial-gradient at hairline pitch, masked to fade out.
+# This is the didi.sh signature ornament; it is not a dot grid.
 ornament:
   mesh:
     type: triple-radial-gradient
-    blend: "overlay (default)"
-    opacity-vibrant: 0.22-0.26
-    opacity-dark: 0.10-0.18
-    opacity-light: 0.04-0.05
-  dot-grid:
-    type: radial-gradient-tile
-    pitch: 32px
-    opacity-dark-modes: 0.35
-    opacity-light-mode: 0.18
-    mask: "radial ellipse fading to transparent at 60% from top-30%"
+    dark: "verdigris-deep 16% / teal-deep 16% / copper-deep 12%"
+    light: "verdigris 7% / teal 7% / copper 6%"
+    vibrant: "uv 22% / #55f0a6 14% / #7e54f0 22%"
+  guilloche:
+    type: repeating-radial-gradient
+    pitch: "11px (--guilloche-pitch)"
+    rosette-upper-right:
+      origin: "86% 6%"
+      ink: "{colors.accent} at 30%"
+      pitch-multiplier: 1
+      mask: "radial fade — opaque to 12%, transparent by 38%"
+      opacity: { dark: 0.16, light: 0.12, vibrant: 0.24 }
+    rosette-lower-left:
+      origin: "6% 96%"
+      ink: "{colors.accent-warm} at 30%"
+      pitch-multiplier: 1.4
+      mask: "radial fade — opaque to 10%, transparent by 34%"
+      opacity: { dark: 0.13, light: 0.10, vibrant: 0.20 }
+    note: >-
+      The two rosettes use DIFFERENT pitches (1x and 1.4x) on purpose.
+      Matched pitch reads as a tiled pattern; mismatched pitch reads as
+      two separately engraved plates, which is the intended effect.
 
 # ─── imagery: extension — Ideogram v3 generate recipe ──────────────────
 # Project-specific extension (outside the Stitch standard groups). Spec-
@@ -568,308 +539,139 @@ imagery:
   naming_convention: "ogimage__Id-Didi-Sh--{Format-Or-Variant}.{ext}"
 ---
 
-# Augment It — Design System
+# didi.sh — Design System
 
 > The runtime source of truth is `src/styles/theme.css` (Tier-1 raw values + Tier-2 semantic bindings under each `:root[data-mode='...']`).
-> The pre-paint resolver lives in `src/layouts/BaseLayout.astro`'s inline script (`localStorage.getItem('augment-it-splash-mode')`).
+> The pre-paint resolver lives in `src/layouts/BaseLayout.astro`'s inline script (`localStorage.getItem('id-didi-sh-splash-mode')`).
 > This document is the **human- and agent-readable** contract that explains the system's intent. Keep the two in sync when either changes.
 
 ## Brand & Style
 
-augment-it is a microfrontend workshop for augmenting structured data with AI — six federated remotes (`record-collector` → `prompt-template-manager` → `request-reviewer` → `response-reviewer` → `highlight-collector` → `insight-manager`) composed by a single host shell. The splash exists to make that architecture **legible** before a visitor opens the repo, and to surface the project's full changelog (including pre-restart Bolt-era and extraction-attempt entries) alongside curated `feature-highlights` cards for the six microfrontends.
+didi.sh is the identity plane for the Lossless venture-tooling family — one credential across three consuming services: **MemoPop AI** (investment-memo orchestration), **DidiDecks AI** (code-first slide decks), and **Augment It** (AI data augmentation). The splash exists to make the credential-posture pitch — *one login, three doors, no passwords ever* — legible to an invited visitor before they open the repo, and to surface the changelog and `context-v/` alongside it.
 
-The aesthetic is **module-federation-manifest as primary surface.** Where memopop centers a headline, lfm leans into a manuscript hero, and content-farm uses a command-palette teaser, augment-it puts a **2×3 grid of the microfrontends *first*** — no centered title-and-diagram pair. The cards *are* the hero. Beneath the grid sits a six-step "pipeline rail" of monospace pills with arrows between them — a quiet textual reinforcement of the flow story the cards just told.
+The aesthetic is **the identity document itself.** Where memopop centers a headline and augment-it leads with a module-federation manifest grid, didi.sh dresses like the thing it issues: a banknote, a passport page, a specimen ID card. This is not decoration — it is the argument. A service whose entire value proposition is *trustworthy credentials* should look engraved, not launched.
 
 Tone calibration:
 
-- **Engineered, not marketed.** Monospace display family. Version chips on changelog entries. Pipeline rail with explicit numeric `01`–`06` prefixes. Eyebrows render the section index as a small bordered chip (e.g. `MFE`, `§ 1`, `§ 2`). The visual vocabulary borrows from manifest files and ledgers, not from product landing pages.
-- **Operator-confident, faintly playful.** The brand spine is a saturated magenta-violet-iris — lifted byte-for-byte from the augment-it wordmark gradient. It glows but doesn't shout; primary CTAs and active toggles wear it, ambient surfaces stay deep ink.
-- **Three modes, vibrant first.** The default mode is **vibrant** (saturated magenta on near-black, demo-shop posture) — augment-it's job is to *enrich* data, and vibrant matches that posture. Dark mode ("operator") dims chrome to violet-soft and swaps the live-thread color to lime. Light mode ("ledger") flips the entire surface to paper-pale with violet-deep as primary, terminal-on-paper for reading at length. The mode-toggle order in the header is **vibrant → dark → light**, deliberately departing from the conventional light/dark/auto sequence.
+- **Institutional, not startup.** Terse datasheet voice. Section markers render as document folios (`SEC.02 · THE SERVICES`). Data — key IDs, JWKS paths, API routes, cascade records — always sets in mono, because on a credential the data fields *are* the content.
+- **Engraved, not glowing.** The brand spine is verdigris, copper, and security-teal: the currency-engraving palette, oxidized-copper green against the plate it was struck from. Surfaces sit on a **green-black vault axis**, not the blue-black most dark themes default to. That single choice does most of the work distinguishing didi.sh from its siblings.
+- **Three modes, dark first.** The default is **dark** ("the vault") — engraved verdigris and copper on deep green-black, banknote intaglio. Light ("security paper") flips to pale green-white stock with engraved ink and verdigris-deep as primary. Vibrant ("UV lamp") is the blacklight check: hidden features fluoresce violet while the verdigris thread stays lit.
 
-Where the splash departs from sibling Lossless splashes is **shape, not just hue.** Cards have **2px L-shaped corner ticks** at each corner (printer's-mark / manifest-frame aesthetic). Section markers ("folios") render the section index as a small bordered chip in primary color. The ornament is a **dot grid** (32px pitch, radial-faded toward the top of the viewport) — not the radial mesh siblings use. This is the experimentation surface that the `maintain-splash-pages` skill explicitly invites — diverge in moves, not just in palette swaps.
+Where the splash departs from sibling Lossless splashes is **shape and ornament, not just hue.** Radii are near-square (2–8px) because documents have hard corners. Statuses wear **stamp chrome** — double-ruled borders, uppercase mono, a two-degree rotation, as if inked by hand. And the background ornament is a pair of **guilloche rosettes**: the fine concentric ring engravings that banknote corners carry, rendered in pure CSS at an 11px hairline pitch.
 
 ## Colors
 
-The palette is rooted in two axes: a **brand spine** straight from the wordmark gradient, and an **editorial-neutral ladder** (ink → slate → paper) the modes pivot through.
+The palette is rooted in two axes: a **brand spine** drawn from currency engraving, and a **vault-ink ladder** (vault-deep → sage → paper) the modes pivot through.
 
-### Brand spine (mode-invariant; the wordmark gradient stops)
+### Brand spine (mode-invariant)
 
-The augment-it wordmark SVG uses a linear-gradient with these stops:
-`#B62DC2 → #794AC3 → #CB5BDE → #7D32C6 → #C157F2 → #6A16AB`.
+Unlike its siblings, didi.sh's spine does not derive from a wordmark gradient — it derives from a *material*. Intaglio printing, oxidized copper plate, and the security thread woven through the paper.
 
-That gradient is the single source of brand color. The frontmatter maps it into three pairs of tones:
+- **Verdigris** — `verdigris-deep #1f9a63` / `verdigris #4ecf95` / `verdigris-soft #b5eed3`. The primary. `verdigris` is `--color-accent` in dark mode; `verdigris-deep` takes over in light mode, where the bright green would not hold contrast on paper.
+- **Copper** — `copper-deep #a86f3d` / `copper #d29a62` / `copper-soft #eed3b2`. The `accent-warm` — the plate under the ink. Carries the lower-left guilloche rosette, the `Alpha`/`Draft` status pills, and the warm terminus of the thread gradient.
+- **Teal** — `teal-deep #2a7f74` / `teal #4fbfae` / `teal-soft #b8e8e1`. The midpoint of `--gradient-thread`, and the light-mode thread color.
 
-- **Magenta** — `magenta-deep #b62dc2` / `magenta #cb5bde` / `magenta-soft #efb6f7`. The headline pair; `magenta` is the default `--color-accent` in vibrant mode.
-- **Violet** — `violet-deep #6a16ab` / `violet #794ac3` / `violet-soft #b9a0ee`. Carries the brand into light + dark modes — `violet-soft` is the dark-mode accent, `violet-deep` is the light-mode accent. Also forms the `--gradient-thread` 110° linear used for `.gradient-text` on headlines.
-- **Iris** — `iris-deep #7d32c6` / `iris #c157f2` / `iris-soft #e0b3ff`. The "accent-warm" — secondary accent for hover states, the search-compact panel border, and the `--color-border-accent` focus ring.
+### Signal hues (off-spine; status and mode-specific roles)
 
-### Signal hues (off-spine; reserved for status / mode-specific roles)
+- **Thread `#55e0d2`** — the security thread. Used on `pill[data-status='Active'|'Stable'|'live'|'Implementing']`, the `from-tag` provenance marker, and the default `.stamp` ink. Deliberately off-spine so it reads as "system-state" rather than "brand."
+- **UV `#9d7bff`** / **UV-soft `#c9b3ff`** — the fluorescing inks. These appear **in vibrant mode only**, where they become `--color-accent`. This is the whole conceit of vibrant: under the lamp, the features you cannot normally see light up.
+- **Amber `#ffb547`** — warm warning.
 
-- **Cyan `#4ad7ff`** — the `thread` color in **vibrant mode only**. Used on `pill[data-status='Active'|'Stable'|'live']`, the `from-tag` provenance marker, and the pipeline-rail container. Never appears as a brand-spine color — it's deliberately off-palette so it reads as "system-state" rather than "brand."
-- **Amber `#ffb547`** — the `archive` marker. Used on the gallery landing page's two pre-history era cards ("Bolt-era monolith", "Extraction attempt") and the matching `category: Archive-Backfill` changelog entries on the splash. Warm-tinted because archived work is *historical*, not *broken*.
-- **Lime `#9ce86b`** — replaces cyan as the thread color in **dark mode only**. Dark mode is "operator" — the lime reads as a CRT-terminal status LED.
+### Editorial neutrals (the vault-ink axis)
 
-### Editorial neutrals (the ink-pad axis)
+A thirteen-step ramp from `vault-deep #060a08` to `paper-deep #dbe5da`. Dark mode draws its surfaces from the bottom (vault-deep → vault → vault-soft → moss-800); light mode draws from the top (paper-deep → paper-soft → paper → white). The sage-700/500/400/300/200/100 mids serve as text colors across modes — sage-700 is soft text in light mode, sage-200 in dark.
 
-A nine-step ramp from `ink-deep #0a0712` to `paper-deep #e2d8eb`. Vibrant + dark mode draw their surfaces from the bottom of the ladder (ink-deep → ink → ink-soft → charcoal); light mode draws from the top (paper-deep → paper-soft → paper → white). The slate-700/500/400/300/200/100 mids serve as text colors across all three modes — slate-700 is the soft text in light mode; slate-200 is the soft text in vibrant mode.
+**The green-black is load-bearing.** `#060a08` is not `#000000` and not a blue-tinted `#0a0712`. If a surface is ever hard-coded to a neutral black, it will read as a hole punched in the vault wall. Always reference `--color-bg`.
 
 ### Semantic bindings (the Tier-2 layer)
 
-Every component on the splash references **semantic tokens** (e.g. `--color-bg`, `--color-text`, `--color-accent`), never the Tier-1 raw values directly. The semantic-to-raw mapping rebinds when the user clicks the mode-toggle. The default (vibrant) bindings are in the frontmatter's `colors:` block; the dark and light overrides live in `modes:`. The single largest "do" of the system is **always reference the semantic token**, because the system has three modes and a component that hard-codes a hex value will only look right in one of them.
+Every component references **semantic tokens** (`--color-bg`, `--color-text`, `--color-accent`, `--color-thread`), never Tier-1 raw values directly. The semantic-to-raw mapping rebinds when the user changes mode. The dark bindings are in the frontmatter's `colors:` block; light and vibrant overrides live in `modes:`. The single largest "do" of the system is **always reference the semantic token** — a component that hard-codes a hex will only look right in one of three modes.
 
-### Status pills
+### Status pills and stamps
 
-Four status values appear on changelog and context-v entries:
+- `Active` / `Stable` / `live` / `Implementing` → thread
+- `Beta` → accent (verdigris / verdigris-deep / uv)
+- `Alpha` / `Experiment` / `planned` / `Draft` → accent-warm (copper / copper-deep / thread)
 
-- `Stable` / `Active` / `live` → cyan (vibrant thread) / lime (dark thread) / green (light thread)
-- `Beta` → primary (mode-dependent: magenta / violet-soft / violet-deep)
-- `Alpha` / `Experiment` / `Draft` → accent-warm (iris / magenta-soft / magenta-deep)
-- `Archived` → renders inline; carries the amber color on the landing-page era cards
+Each pill is ~12% fill against a ~50%-alpha border in its own accent, so pills coexist with the vault surface without out-shouting primary CTAs.
 
-Each pill is ~12% fill + ~40% border alpha in its own accent — so pills coexist with the dark surface without becoming louder than primary CTAs.
+The **stamp** is the posture's signature and is reserved for document surfaces — service cards, the specimen ID, "Stamped as it ships." It takes `data-ink="copper|accent|dim"` to rebind `currentColor`; the double rule and the `-2deg` rotation come along automatically.
 
 ## Typography
 
-**Two families. Mono-forward by design.**
+**Three families, mono-forward for data.**
 
-- **JetBrains Mono** — used for the *display* family (h1/h2 hero), all eyebrows, the pipeline-rail steps, version chips, status pills, sort-controls, the search popover trigger, code chips, and the brand-mark glyph. The mono-as-display choice is the central typographic move — augment-it is a *data tool*, and the splash should read like a developer-facing surface, not a marketing landing.
-- **Space Grotesk** — used for sans body, section H2s, card titles (module / entry-list), and the manifest tagline. Geometric and slightly technical; pairs cleanly with the mono display without competing for the "engineered" feel.
+- **Space Grotesk** — the display family. All `h1`–`h6` at weight 600, `line-height: 1.08`, `letter-spacing: -0.015em`. Geometric and slightly technical; does engraved-caps headline duty without tipping into novelty.
+- **IBM Plex Sans** — body. 16px / 1.6. IBM Plex is an institutional typeface designed for a corporation's documentation, which is exactly the register a credential service wants.
+- **IBM Plex Mono** — every data field, and every label. Eyebrows, folios, pills, stamps, version chips, code chips, `from-tag`. On a credential the mono fields are the content, so the mono is not an accent here — it is roughly half the type on the page.
 
-Scale (vibrant-mode bindings; mode does not affect type size):
+Label scale (mode does not affect type size):
 
-- **Display Hero** — Space Grotesk 700 at `clamp(2rem, 4.6vw, 3rem)`. The manifest title on the splash index. Lower top-end than memopop/content-farm — augment-it's hero composition gives more vertical real estate to the MFE grid, so the title doesn't need to dominate.
-- **Headline LG** — Space Grotesk 700 at `clamp(2rem, 4.6vw, 2.8rem)`. Section H1s on `/changelog`, `/context-v`, and entry detail pages.
-- **Headline MD** — Space Grotesk 700 at 1.4rem. Entry-list titles, manifest module-card titles.
-- **Headline SM** — Space Grotesk 700 at 1.18rem. Context-v entry-list titles in grouped views.
-- **Body LG / MD / SM** — Space Grotesk 400 at 1.1rem / 1rem / 0.92rem. Manifest tagline uses body-lg; module-card descriptions use body-sm; prose paragraphs use body-md via `prose.css`.
-- **Mono MD / SM** — JetBrains Mono 500. Pipeline rail, sort-controls labels, status meta, hero install line.
-- **Label Eyebrow** — JetBrains Mono 500, 0.72rem, 0.18em letter-spaced uppercase. Used by the `.folio` component. The eyebrow's `data-num` attribute renders as a small bordered chip in primary (e.g. `MFE` for the manifest, `§ 1` / `§ 2` for sub-sections).
-- **Label Pill** — JetBrains Mono 500, 0.7rem, 0.06em. Tighter letter-spacing than eyebrow because pills sit in tighter UI spaces.
-- **Label Version** — JetBrains Mono 500, 0.66rem, 0.04em. Used by the `.ver-chip` (semver / manifest-version badge), which appears on every changelog list item and detail page.
-
-**Reading-width convention.** Prose articles in `.entry__body` and `.module__body` cap at `68ch`. The splash's `.container-narrow` caps the layout itself at 760px, which produces ~70ch line-length on body-md. Module-card lede paragraphs are uncapped because they're already inside a sub-container with its own width.
+- **Eyebrow** — 0.72rem, `0.22em` letter-spacing, uppercase.
+- **Folio** — 0.72rem, `0.18em`, uppercase. The `.folio` component's `data-num` renders as a small bordered chip in accent (e.g. `SEC.02`).
+- **Pill** — 0.7rem, `0.06em`. Tighter than eyebrow because pills sit in tighter UI.
+- **Stamp** — 0.66rem, weight 600, `0.16em`, uppercase.
+- **Version** — 0.66rem, `0.04em`. Used by `.ver-chip`.
 
 ## Layout & Spacing
 
 A **fixed-max-width** layout with two widths:
 
-- **`.container` — 1180px** — full-width sections (manifest grid, landing-page eras, footer).
-- **`.container-narrow` — 760px** — single-column long-form (changelog/context-v lists + detail pages, search page).
+- **`.container` — 1180px** — full-width sections (the three-service grid, footer).
+- **`.container-narrow` — 760px** — single-column long-form (changelog and context-v lists and detail pages, search).
 
-Inside both, `padding-inline: var(--space-6)` (24px) reserves a consistent minimum gutter to the viewport edge.
-
-**Vertical rhythm.** Sections under `.manifest` and equivalent get `padding: var(--space-12) 0` (48px top + bottom). The hero block uses `var(--space-12) 0 var(--space-16)` (48px top, 64px bottom) for slightly more presence; the recent-changes section adds a `border-top: 1px solid var(--color-border)` so the section break reads even if the content above happens to end shy.
-
-**Section-internal rhythm.** Inside a section: the section-head has `margin-bottom: var(--space-8)` to `var(--space-10)` (32–40px) before the first grid or list. Section-head children (`folio → h2 → lede`) use `var(--space-3)` and `var(--space-4)` to step down.
-
-**Grid gap convention:**
-
-- **3-col manifest grid** (the six microfrontend cards on the splash index): `gap: var(--space-5)` (20px). Below 980px collapses to 2 cols; below 620px collapses to 1.
-- **List view** (`/changelog`, `/context-v`): no gap between `<li>` items — each `<li>` carries `border-bottom: 1px solid var(--color-border)` and `padding: var(--space-6) 0`, producing a clean ledger look without compounding gaps.
-- **Header → page-body gap** is fixed by the sticky `.site-header { height: 64px }` plus the first content section's top-padding; no additional spacer.
-
-**Container padding.** `var(--space-6)` (24px) on each side of both containers. Never let an element extend past that gutter.
-
-## Elevation & Depth
-
-The system is **mostly flat with corner-tick framing.** Depth signals (in order of strength):
-
-1. **Tonal layering.** `surface-base` (body) → `surface-card` (translucent rgba over `surface-elevated`, the "card shelf") → `surface-elevated` (search popover, palette-like surfaces). Each layer reads as "one shelf up" without needing a drop shadow.
-2. **Corner ticks on cards.** The `module` component (FeatureCard) carries **four absolutely-positioned 10×10 divs** — one per corner, each rendering an L-shape via 2px borders in `--color-accent`. This is the project's signature visual move; it makes every module card read as a "framed manifest entry" rather than a generic card.
-3. **Border-accent on hover.** Cards transition `border-color` to `--color-border-strong` on hover and lift `translateY(-2px)`. The shadow stays minimal — only the `box-shadow: var(--shadow-card)` is layered in.
-4. **Glow shadow — rare.** `--shadow-glow` (a soft `0 0 80px` of magenta at 22% alpha in vibrant; 18% in dark; 8% in light) is **never set on a default state**. It's reserved for the splash-index hero block where the manifest CTA sits and for the search-popover panel.
-
-The fixed `.bg-mesh` element provides ambient depth via three radial gradients (mode-tinted) plus a 32px-pitch dot grid in `--color-accent` at ~35% opacity (dark modes) / 18% (light mode). The dot grid is masked toward the top of the viewport via a radial-ellipse `mask-image`, so the dots fade out below the fold. Everything sits at `z-index: 0` with `pointer-events: none`; page content is `z-index: 1`. **The mesh + dot grid is the only ambient lighting — do not add a second background gradient.**
+Inside both, `padding-inline: var(--space-6)` (24px) reserves a consistent gutter to the viewport edge.
 
 ## Shapes
 
-**Squarer than memopop and content-farm.** The "module manifest" aesthetic wants edges, not generous rounding.
+**Documents are square.** The radius ladder tops out at 8px and spends most of its time at 2–3px:
 
-- **`sm` (2px)** — version chips, code chips, from-tags, kbd. The smallest reusable surface.
-- **`md` (4px)** — buttons, most cards including the `module` component, sort controls, mode-toggle frame, search-compact popover.
-- **`lg` (6px)** — search-compact panel, manifest-card variants, the elevated surface popovers.
-- **`xl` (10px)** — hero panels. Not currently used on the splash, but reserved.
-- **`full` (9999px)** — pills, status badges, search-compact trigger, mode-toggle inner items. Anything that needs to read as "stamp" or "tap-target."
+- `sm: 2px` — chip, ver-chip, from-tag, stamp, folio number chip
+- `md: 3px` — buttons
+- `lg: 5px` / `xl: 8px` — larger panels
+- `pill: 999px` — status pills only
 
-**Border thickness.** All borders are `1px solid` by default. The exceptions:
+Status pills are the one deliberate exception. They are round because they are *stickers applied to* the document, not part of it.
 
-- **Corner ticks** on the `module` component are `2px` borders (the L-shapes).
-- **Manuscript margin rule** — none. (memopop has one; we don't.)
-- **Hairline section breaks** — `1px solid var(--color-border)` between `<section>` elements.
+## Ornament
 
-**Icons.** SVG icons use `stroke-width: 2` with rounded line-caps. The brand-mark glyph in the header (`⌬`) is a Unicode character set at `1.4rem` in primary color. Mode-toggle icons (sun / moon / sparkle) are inline SVG at 14×14.
+`.bg-mesh` is a fixed, pointer-events-none layer at `z-index: 0`; every direct child of `body` that is not `.bg-mesh` gets `position: relative; z-index: 1`.
 
-## Components
+It carries two things: three soft radial **mesh gradients**, and two **guilloche rosettes** built from `repeating-radial-gradient` at the `--guilloche-pitch` hairline (11px), each masked by a radial fade so it dissolves before reaching the middle of the page.
 
-### Header
+The rosettes use **different pitches** — 1× upper-right in accent, 1.4× lower-left in accent-warm. This is intentional and worth preserving: matched pitch reads as a tiled background pattern, mismatched pitch reads as two separately engraved plates.
 
-Sticky top, 64px tall, full-width with internal `.container`. Background is `color-mix(in oklab, var(--color-bg) 88%, transparent)` with `backdrop-filter: blur(10px)` — a translucent overlay that lets the dot grid bleed through faintly. Hairline `border-bottom: 1px solid var(--color-border)`.
+Opacities step up with mode intensity: light `0.12 / 0.10`, dark `0.16 / 0.13`, vibrant `0.24 / 0.20`.
 
-Contains:
+## Modes
 
-- **Brand link** (left) — `⌬` glyph in primary + "Augment It" wordmark + responsive `A·IT` short-form (visible below 720px).
-- **Primary nav** (center-right) — Apps / Changelog / Context / Search / GitHub. Below 860px, items beyond the 3rd are hidden.
-- **Actions cluster** (right) — `SearchBox compact` + `ModeToggle`.
+Three modes on `<html data-mode="...">`, resolved before first paint.
 
-### SearchBox (Pagefind)
+| Mode | Label | Surface | Accent | Thread |
+|---|---|---|---|---|
+| `dark` *(default)* | the vault | vault-deep `#060a08` | verdigris `#4ecf95` | `#55e0d2` |
+| `light` | security paper | paper `#f3f6f2` | verdigris-deep `#1f9a63` | teal-deep `#2a7f74` |
+| `vibrant` | UV lamp | `#07060f` | uv `#9d7bff` | `#55f0a6` |
 
-Two variants:
+**Vibrant is dark-based**, per the three-mode contract. It shifts the surface from green-black to violet-black and hands `--color-accent` to the UV inks, but it never inherits light mode's paper. The verdigris thread survives the shift as `#55f0a6` — under the lamp, the security thread is the one feature that stays lit.
 
-- **`compact`** (default in header) — `<details>` element with a pill-shaped trigger showing a magnifying-glass icon + "Search" + a `/` kbd hint. Opens a 380–560px popover beneath the trigger. On mobile (≤720px), the popover becomes a fixed-position drawer.
-- **`full`** (used on `/search`) — permanent panel, max-width 760px, with `autoFocus` to land cursor in the input.
+`BaseLayout.astro` ships `data-mode="dark"` in the markup, and its inline pre-paint script reads `id-didi-sh-splash-mode` from `localStorage` and applies the stored choice before first render.
 
-Pagefind UI variables are mapped to semantic tokens (`--pagefind-ui-primary: var(--color-accent)`, etc.) so the search UI pivots through all three modes with the rest of the site. Global `/` keyboard shortcut focuses the compact popover from anywhere.
+## Do / Don't
 
-### ModeToggle
+- **Do** reference semantic tokens (`--color-accent`, `--color-bg`, `--color-thread`) in every component. Three modes means a hard-coded hex is wrong in at least two of them.
+- **Do** set data in `--font__mono`. Key IDs, JWKS paths, API routes, cascade records, timestamps.
+- **Do** keep the green-black. `--color-bg` is `#060a08`, not black. A neutral-black surface reads as a hole in the vault.
+- **Do** keep radii near-square. If something needs to look softer, it probably needs different spacing, not a bigger radius.
+- **Don't** blanket-replace the string "Augment It." It is one of the three consuming services didi.sh issues credentials for, and it belongs on this site. What does *not* belong is augment-it's magenta-violet-iris palette, which this document previously carried wholesale.
+- **Don't** let vibrant mode inherit a light background. It is the UV lamp — dark-based by definition.
+- **Don't** match the two guilloche pitches. The 1× / 1.4× mismatch is what makes the pair read as engraving rather than wallpaper.
+- **Don't** drop the `data-mode` attribute or the pre-paint resolver in `BaseLayout.astro`. Without it every reload flashes the default before settling to the user's chosen mode.
 
-Three-button segmented control: **vibrant → dark → light** (not the conventional light/dark/auto order). 32×32 each, 2px gap, `rounded-md` frame with `1px solid border-strong`. Active button gets `background: var(--color-accent)` + `color: var(--color-bg)`. Persists choice to `localStorage` under key `augment-it-splash-mode`. Pre-paint resolution happens in `BaseLayout.astro`'s inline script before first render, so there's no FOUC.
+## Known drift
 
-### FeatureCard (the `module` component)
+Tracked here so it does not get rediscovered:
 
-The corner-tick framed primary card on the splash index. Used for the six microfrontends on `/`, plus any future curated highlight. Anatomy:
-
-- **Four corner-tick divs** (absolutely positioned, 2px L-shapes in `--color-accent`).
-- **`module__head`** — `module__id` row (mono slug + status pill) → `module__title` (Space Grotesk 700 1.18rem) → `module__lede`.
-- **`module__body`** — rendered markdown via the `prose` class.
-- **`module__tags`** — flat mono tags with a dashed top border (`1px dashed`).
-
-A `module--featured` variant adds a top-left "Featured" pill in primary + surface-base text and ups the border opacity. The corner ticks stay the same.
-
-### SortControls
-
-Mounted at the top of `/changelog/` and `/context-v/` list pages. Renders as a single horizontal control bar: label ("Sort by") + chip-group of sort keys (`Modified` / `Created` / `Published` / `Title`) + a direction toggle (`↓ Newest first` / `↑ Oldest first`; for `Title` it becomes `Z → A` / `A → Z`). The active chip wears `background: var(--color-accent)` + `color: var(--color-bg)`.
-
-Persistence is per-page in `localStorage` under namespaced keys (`augment-it-splash-sort:changelog`, `augment-it-splash-sort:context-v`) — `/changelog` and `/context-v` keep independent sort preferences. Server pre-sorts to match the UI default (`date_modified desc`) so the static HTML reads correctly even before JS hydrates.
-
-### Pipeline rail
-
-Used once, on the splash index, beneath the manifest grid. Renders the six microfrontend slugs as monospace pills separated by `→` arrows: `record-collector → prompt-template-manager → request-reviewer → response-reviewer → highlight-collector → insight-manager`. Each pill wears a faint magenta tint (`rgba(203, 91, 222, 0.10)` fill + `rgba(203, 91, 222, 0.30)` border). The arrows are `accent-warm` (iris). Wraps to multiple lines on narrow viewports.
-
-### Pill (status)
-
-JetBrains Mono 0.7rem at 0.06em letter-spacing, pill-shaped. Four `data-status` variants:
-
-- `Active` / `Stable` / `live` → thread (mode-dependent)
-- `Beta` → primary
-- `Alpha` / `Experiment` / `planned` / `Draft` → accent-warm
-- (default) → on-surface-soft
-
-Each variant is ~12% fill + ~50% border-alpha in its accent. Never put more than one status pill on a card.
-
-### ver-chip (semver / manifest-version chip)
-
-Tiny mono badge (0.66rem) used inline next to dates. `rgba(203, 91, 222, 0.08)` fill + `rgba(203, 91, 222, 0.36)` border. Shows on every changelog list item and detail page when `at_semantic_version` or `semantic_version` is in the entry's frontmatter.
-
-### from-tag (provenance marker)
-
-Cyan-tinted (`rgba(74, 215, 255, 0.12)` fill + `rgba(74, 215, 255, 0.35)` border) mono tag with a 6px round dot before the text. Used on changelog entries that come from a different submodule than the current splash (the rolled-up case). Not currently visible since this is the single-project variant, but the styling is shipped and ready when the splash ever becomes a rollup target.
-
-### folio (section marker)
-
-The "manuscript-style chapter mark" — but stamped with a module-marker chip. Renders as an eyebrow (label-eyebrow type) with a `::before` pseudo-element rendering the element's `data-num` attribute as a small bordered chip in primary color. Used as the `<p class="folio" data-num="§ 1">` opener on every section. The `data-num` values are typically `MFE`, `§`, `§ 1`, `§ 2`, etc.
-
-## Imagery
-
-All id-didi-sh OG imagery is generated via Ideogram's v3 generate endpoint. The frontmatter's `imagery:` block is the **complete, locked recipe**: every field there is constant across every request. The only two things that vary per call are the `prompt` (subject + composition) and the `aspect_ratio` (one entry from `imagery.aspect_ratios`).
-
-This is on purpose. The single biggest cause of "why don't these four banners look like they belong together" is per-request drift in brand vocabulary, palette wording, and style adjectives smuggled into the prompt. Ideogram's v3 schema gives us structured channels for all of that — `style_reference_images`, `color_palette`, `style_type`, `magic_prompt` — and using them is strictly more reliable than typing the same adjectives into every prompt and hoping the model interprets them the same way twice.
-
-### Aesthetic family — comic-ink vault engraving, near-monochrome with a copper/verdigris pop
-
-The illustrative language is **comic-style inking — heavy contour lines and dense crosshatching, near-monochrome on a near-black ground, with the credential brand's copper and verdigris used sparingly as pop accents.** This is deliberately the same illustration family as [`context-vigilance-kit/splash`](../../context-vigilance-kit/splash/) — same crosshatch density, same dark-void atmosphere, same restrained-pop discipline — but with **copper (gold) and verdigris (aged brass)** displacing context-vigilance's sienna/orange. A reader who lands on both splashes back-to-back should feel the family resemblance; a reader who lands on id-didi-sh alone should never wonder what brand they're looking at.
-
-Why mono-with-restrained-pop rather than full-color? Three reasons:
-
-1. **id-didi-sh's full palette has three brand-spine colors (verdigris + copper + teal) plus signal hues (thread, UV, amber).** If all of them show up in a generated image, the image reads as "an Ideogram thing" rather than as "a didi.sh thing." Constraining the visual palette to gold/copper as the dominant pop, with verdigris and teal as quieter accents, forces the image to lean on *composition + line work* for legibility, not on color noise.
-2. **Comic-ink imagery scales gracefully across aspect ratios.** A 4×5 portrait and a 16×9 banner share a visual language even though they crop the scene differently; full-color illustrations tend to lose their identity when the composition changes.
-3. **It pairs cleanly with the splash's vault-mode UI.** The page itself already carries the engraved verdigris-and-copper "vault" brand experience by default. A gold/diamond-forward OG image *complements* that instead of competing with it — the OG image is what's being protected, the live page is the vault protecting it.
-
-### Subject canon — the safety deposit box metaphor
-
-id-didi-sh's job, in one sentence: *one identity, issued once, held safe, and lent out to every consuming service without ever leaving the vault*. The OG imagery uses a literal bank-vault metaphor for this:
-
-| id-didi-sh abstraction | OG-image rendering |
-|---|---|
-| The identity service itself | The vault |
-| The `didi_session` credential | The safety deposit box |
-| The identity/account being protected | Gold coins and loose diamonds inside the box |
-| The one credential shared across consumers | The key, still in the lock |
-| The three consuming services (memos, decks, augment-it) | The row of matching boxes along the vault wall |
-
-The full-scene canonical prompt (subject only — the empty-region clause is the locked composition rule, see below):
-
-> *an open brass safety deposit box overflowing with gold coins and loose diamonds, set into a vault wall lined with rows of matching deposit boxes, a key in the lock*
-
-Per-format crops focus on different beats of the same scene so the family reads as one continuous visual story — see `imagery.subject_canon.per_format_focus` in the frontmatter for the per-aspect-ratio framing.
-
-### The locked channels (don't touch per request)
-
-- **`style_reference_images`** — the canonical illustration anchor. `imagery.style_reference.path` points to id-didi-sh's own winning generation (`public/ogimage__Id-Didi-Sh--Default.jpg`), self-anchored — see "Bootstrap — the first run" below for why this project does *not* borrow the context-vigilance-kit reference.
-- **`color_palette.members`** — five weighted entries (vault-deep, copper, paper, verdigris, teal). Vault-deep dominates at 0.40 so the dark void is the default ground; copper carries the gold/brass pop (coins, box, key) at 0.25; paper-white carries linework highlights and diamond sparkle; verdigris carries the aged-brass patina accent; teal carries the cool security-thread counter-note.
-- **`style_type: AUTO`** — required whenever `style_reference_images` is uploaded. The v3 API enforces mutual exclusion: `DESIGN` / `REALISTIC` / `FICTION` are rejected when a reference is present. `AUTO` lets the reference image drive style.
-- **`magic_prompt: OFF`** — non-negotiable. With magic_prompt on, Ideogram rewrites your prompt before generation, which produces visible drift across "identical" runs.
-- **`negative_prompt`** — short on purpose, but extended past the skill's base list with `sign, plaque, banner, poster, label` after observed drift (see "Bootstrap" below) — the multi-hex `color_palette` can otherwise get interpreted as "make it colorful" rather than "weight these colors this way." `subject in top half` actively penalizes the model growing the subject up into the overlay zone (see "empty-space-first composition" below).
-- **`seed: 20260706`** — fixed. Reads as the ISO date `2026-07-06` — the repo's first commit. Bump only when the visual canon itself shifts.
-- **`rendering_speed: QUALITY`** — for production. Use `TURBO` or `FLASH` only during prompt iteration.
-
-### The variable channels (the only things you change)
-
-- **`prompt`** — one or two sentences total. Two ingredients only, in this exact order:
-  1. **Empty region as a first-class subject.** Lead the prompt with the empty region — declare it explicitly, give it concrete content. The id-didi-sh pattern is `Top 1/3 of frame is empty negative space, dark guilloche-etched sky.` The guilloche sky echoes the splash's own ornament layer (the engraved-rosette background) so the image and the live page share a visual cue.
-  2. **Subject** from the canon above, with per-format focus. *"Bottom 2/3 contains an open brass safety deposit box overflowing with gold coins and loose diamonds, a key hanging from the lock, a vault wall of matching boxes at the edges."*
-
-  Target ≤220 characters total. Past that, hard composition asks start losing to subject elaboration.
-
-  **Three rules that survive aspect-ratio changes:**
-  - **Lead with the empty region**, not the subject — first sentence describes what's empty and what fills that emptiness (the guilloche-etched sky).
-  - **Use explicit numeric proportions** ("top 1/3 / bottom 2/3"), never soft terms ("lower portion", "behind").
-  - **Reinforce in `negative_prompt`** with the specific failure mode (`subject in top half`).
-
-  See `imagery.prompt.example_*` in the frontmatter for the canonical phrasings of the three most-used aspect ratios.
-
-- **`aspect_ratio`** — pick from `imagery.aspect_ratios`. Default tall (`banner_tall = 3x4`) is the priority surface — iMessage and WhatsApp chat previews unfurl this format first.
-
-### Bootstrap — the first run (and why it skipped the shared reference)
-
-The usual Lossless bootstrap path borrows `context-vigilance-kit/splash/public/ogimage_Context-Vigilance_1024x1024.jpg` as a first-run style anchor for the shared comic-ink crosshatch language. **For id-didi-sh this failed**: that reference image is itself a "Keep Calm w/ Context Vigilance" poster with a large hand-lettered headline as its dominant feature, and `style_reference_images` is the strongest signal in the v3 API — it overpowered `negative_prompt` and produced garbled pseudo-text banners across the top of all 4 candidates (2026-07-07 run, `banner_tall`, seed 20260706).
-
-The fix: drop the style reference for the bootstrap pass entirely and generate from `color_palette` + `prompt` alone (the skill's brand-new-site fallback), then self-anchor on the winner. Also strengthened `negative_prompt` with `sign, plaque, banner, poster, label` as a second line of defense.
-
-1. Run the recipe with **no `style_reference_images`** — `color_palette` + `prompt` only, `style_type: GENERAL`. Use the canonical `banner_tall` subject first (3×4) — the priority WhatsApp/iMessage format for this project.
-2. Generate 4 candidates (`num_images: 4`). Pick the winner.
-3. Convert PNG → JPEG (`ffmpeg -y -i candidate-N.png -q:v 2 public/ogimage__Id-Didi-Sh--Default.jpg`).
-4. Set `imagery.style_reference.path` in `DESIGN.md` to that file (already done — no `bootstrap_reference` block exists in this project's canon).
-5. Run the recipe for the other aspect ratios **with** the new canonical reference uploaded and `style_type: AUTO`. The family is now self-anchored — every subsequent run inherits the texture, density, and pop weighting from id-didi-sh's own asset.
-
-### Preservation discipline
-
-Per the `generate-consistent-og-images` skill, two preservation layers apply to every run:
-
-- **Layer 1 — raw candidates auto-archive.** Every Ideogram call writes its four candidates into `.ideogram-candidates/<subject>-<aspect>-<YYYYMMDD-HHMMSS>/` (alongside the response JSON). The dot-prefixed parent sits outside `public/` so Astro doesn't ship raw PNGs to GitHub Pages. Timestamped per-run subdirs are never overwritten.
-- **Layer 2 — canonical JPEGs archive on replacement.** When a re-run produces a new winner for an existing format, the prior canonical `public/ogimage__Id-Didi-Sh--Foo.jpg` moves to `.ogimage-archive/ogimage__Id-Didi-Sh--Foo--YYYY-MM-DD.jpg` before the new file is written. The unfurler URL stays stable; the byte history is preserved.
-
-### Anti-patterns
-
-- **Putting brand or palette words in the prompt.** "Copper accent, comic-style inking…" — every word competes with the actual subject. The locked channels already encode this.
-- **Long negative prompts.** Each token in `negative_prompt` is also a competitor for attention. Stay close to the locked list.
-- **Varying `magic_prompt` or `seed` across requests in a set.** Either change is the single largest source of "why don't these match." Lock both at the project level.
-- **Subject-first framing for overlay-bearing imagery.** Saying *"the box in the lower third"* alone is not enough. Lead with the empty region as a first-class rendered subject; the subject won't be left as residue, it has to be declared, named, and given content.
-- **Pulling a *different* subject family for one aspect ratio.** All id-didi-sh OG imagery uses the safety-deposit-box-in-a-vault subject canon. Don't substitute "abstract key/lock diagram" for the square format because square is harder to compose — recrop the canonical scene instead.
-
-## Do's and Don'ts
-
-- **Do** use semantic tokens (`--color-*`, `--font__*`) in component styles. Never hard-code a hex value. The splash has three modes; a component that hard-codes will look right in exactly one of them.
-- **Do** keep the corner-tick treatment on the `module` component. It's the project's signature visual move and the most direct expression of the "manifest-file" aesthetic. Don't replace with a generic card outline.
-- **Do** order the mode-toggle as **vibrant → dark → light**, not light → dark → vibrant. Vibrant is the default and the project's *posture*; it leads.
-- **Do** lead with the **MFE manifest grid** on the splash index. The cards are the hero. Don't reach for a centered headline-plus-diagram layout.
-- **Do** use the cyan thread (vibrant) / lime thread (dark) / green thread (light) for status-only cues — never as a brand-spine color. The off-spine thread is what signals "system state" vs. "brand."
-- **Do** maintain the JetBrains-Mono-on-display / Space-Grotesk-on-body split. Card titles are Space Grotesk (they name a *thing*); pipeline rail and version chips are mono (they describe *manifest data*).
-
-- **Don't** introduce a third typeface. JetBrains Mono and Space Grotesk are the system.
-- **Don't** add corner ticks to non-`module` components. They're the manifest-card signature; spreading them dilutes the move.
-- **Don't** swap the order in the brand spine. The wordmark gradient stops are the canonical sequence; if you ever extract the gradient for a different surface (banner, OG, etc.), preserve the magenta → violet → iris → magenta order.
-- **Don't** introduce a second background gradient layer. The fixed `.bg-mesh` (radial mesh + dot grid) is the only ambient lighting.
-- **Don't** drop the `data-mode` attribute or remove the pre-paint resolver in `BaseLayout.astro`. The script that reads `augment-it-splash-mode` from `localStorage` runs *before* the first paint to avoid FOUC — without it, every reload flashes vibrant before settling to the user's chosen mode.
-- **Don't** soften the radii. The `rounded` scale (2/4/6/10/full) is deliberately tight. Pills stay round; everything else stays close to a 1×1 grid square.
-- **Don't** use `gap` on the changelog or context-v `<ul>` lists. Each `<li>` carries its own `border-bottom + padding`; adding `gap` produces a ladder-rung look that breaks the ledger aesthetic.
-- **Don't** put a status pill on a `module` card and a `ver-chip` next to it in the same module-id row. Pick one — module cards use status pills; entry-list items use ver-chips. Mixing the two in one frame produces stacked-badge noise.
+- **`ModeToggle.astro` uses augment-it's mode vocabulary.** Its `aria-label`s read "Demo mode (vibrant)", "Operator mode (dark)", "Ledger mode (light)". The didi.sh vocabulary is **UV lamp / the vault / security paper**. The labels should be brought over.
+- **`ModeToggle.astro` falls back to `'vibrant'`** when reading the current mode, while `BaseLayout.astro` ships `data-mode="dark"`. Dark is the default; the fallback should say so.
+- **The Phoenix app does not use this system at all.** `assets/css/app.css` is stock Tailwind 4 + daisyUI with the generator's Phoenix-purple dark and Phoenix-orange light themes, and it drives `data-theme` (`light`/`dark`/`system`) rather than `data-mode` (`dark`/`light`/`vibrant`). See `context-v/plans/Bring-The-Spike-Under-The-Credential-Design-System.md`.
