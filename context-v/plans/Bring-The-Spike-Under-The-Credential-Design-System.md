@@ -1,6 +1,7 @@
 ---
 title: "Bring the spike under the credential design system"
 lede: "The splash already has a real three-mode design system — verdigris, copper, and security-teal on vault-black. The Phoenix app has never seen it: it is stock generator output, down to the framework logo and the orange light theme. Five increments to close the gap, starting with the two DESIGN.md files that currently describe a different product entirely."
+publish: false
 date_created: 2026-08-21
 date_modified: 2026-08-21
 authors:
