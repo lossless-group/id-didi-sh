@@ -210,3 +210,42 @@ Issue deleted.
 
 **Not done:** `wind_down_until` is stored and ignored (plan OQ 5 — decide whether
 v1 honours it or drops the column).
+
+## Increment 5 — resolve, and the meter — ✅ PASSED 2026-08-21
+
+**Built:** `apps.token_hash` migration + `App` schema; `Accounts.issue_app_token/1`
+and `authenticate_app/1`; `Plugs.RequireApp`; `Credentials.resolve/4`,
+`record_usage/2`, `spend_in_period/1`, `usage_for_credential/1`;
+`POST /api/internal/resolve`; 9 tests. Suite 75 → **83 passed**, first run.
+
+**Gate:** a registered app resolves a key and a `credential_usage` row appears
+with the right entity, calls and cost. Observed.
+
+**The test that matters most:** a request carrying BOTH a valid app token and a
+valid user session cookie is **rejected with 403**. Ruling 3's invariant is that
+a human borrower never sees a value; if a browser could reach this by carrying a
+cookie, the invariant would be broken by the transport rather than by anyone's
+intent. So `RequireApp` does not merely ignore the cookie — it refuses the
+request and says why.
+
+**Decided in flight:**
+
+1. **`apps` gained a credential.** It was a registry for validating redirect
+   prefixes, with no secret. Resolving is server-to-server, so an app now proves
+   it is itself: raw token shown once, SHA-256 hash stored, same discipline as
+   `login_tokens`. Re-issuing replaces the old token, which is also how you
+   revoke.
+2. **Cap enforcement landed here rather than in increment 6.** `resolve/4` is
+   the only place spend occurs, so checking the cap anywhere else would be
+   checking it somewhere it cannot be enforced. Increment 6 keeps the reporting
+   half.
+3. **Ambiguity is logged, not hidden.** Two live loans for the same provider on
+   one entity is a genuine ambiguity a human created — there is no hierarchy to
+   resolve it (Ruling 1). Takes the most recently lent and emits a warning.
+4. **`no_live_loan` carries a `detail` a human can act on** — "Ask someone to
+   lend one." The caller is a program relaying this to a person.
+5. **Cap exceeded returns 402 Payment Required**, which is the one status code
+   that means exactly this.
+
+**Not done:** `usage_for_credential/1` exists but no endpoint exposes it — that
+is increment 6, along with deciding who may read it (issue: plan OQ 4).

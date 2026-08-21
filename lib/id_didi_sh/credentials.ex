@@ -27,7 +27,7 @@ defmodule IdDidiSh.Credentials do
   alias IdDidiSh.Repo
   alias IdDidiSh.UUID7
   alias IdDidiSh.Accounts
-  alias IdDidiSh.Credentials.{Credential, Cascade, Loan}
+  alias IdDidiSh.Credentials.{Credential, Cascade, Loan, Usage}
 
   @providers ~w(anthropic openai google decile streak firecrawl tavily other)
 
@@ -293,6 +293,130 @@ defmodule IdDidiSh.Credentials do
         distinct: true
     )
   end
+
+
+  ## Resolve — the only path that returns plaintext
+
+  @doc """
+  Hand a lent credential's value to a **registered server-side app** acting for
+  an entity, and record the use.
+
+  This is the single exception to "nobody reads the value", and the boundary is
+  deliberate: Ruling 3's invariant is that a *borrower* — a human — never sees
+  it. A registered app is not a borrower. A browser must never reach this, which
+  is why the endpoint in front of it refuses cookie auth outright.
+
+  `opts`: `:didi_id` (the person on whose behalf the app is acting, if any),
+  `:units`, `:cost_estimate`.
+
+  Returns `{:ok, plaintext}` or `{:error, reason}` where reason is
+  `:no_live_loan` or `:cap_exceeded`.
+  """
+  def resolve(entity_id, provider, app_slug, opts \\ []) do
+    case live_loans_for_entity(entity_id) |> Enum.filter(&(&1.credential.provider == provider)) do
+      [] ->
+        {:error, :no_live_loan}
+
+      [match | rest] ->
+        # More than one live loan for the same provider is a genuine ambiguity a
+        # human created — there is no hierarchy to disambiguate it (Ruling 1).
+        # Take the most recent (live_loans_for_entity orders by lent_at desc)
+        # and make the ambiguity visible rather than silently arbitrary.
+        if rest != [] do
+          require Logger
+
+          Logger.warning(
+            "multiple live #{provider} loans for entity #{entity_id}; using cascade #{match.cascade.id}"
+          )
+        end
+
+        record_and_return(match, entity_id, app_slug, opts)
+    end
+  end
+
+  defp record_and_return(%{loan: loan, cascade: cascade, credential: credential}, entity_id, app_slug, opts) do
+    if cap_exceeded?(cascade) do
+      {:error, :cap_exceeded}
+    else
+      {:ok, _} =
+        record_usage(loan.id, %{
+          credential_id: credential.id,
+          cascade_id: cascade.id,
+          entity_id: entity_id,
+          didi_id: Keyword.get(opts, :didi_id),
+          app_slug: app_slug,
+          units: Keyword.get(opts, :units),
+          cost_estimate: Keyword.get(opts, :cost_estimate)
+        })
+
+      {:ok, credential.value_encrypted}
+    end
+  end
+
+  @doc "Append a usage row. Append-only: never updated, never deleted."
+  def record_usage(loan_id, attrs) do
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+    Repo.insert(%Usage{
+      loan_id: loan_id,
+      credential_id: attrs[:credential_id],
+      cascade_id: attrs[:cascade_id],
+      entity_id: attrs[:entity_id],
+      didi_id: attrs[:didi_id],
+      app_slug: attrs[:app_slug],
+      units: attrs[:units],
+      cost_estimate: attrs[:cost_estimate],
+      occurred_at: now,
+      inserted_at: now,
+      updated_at: now
+    })
+  end
+
+  @doc """
+  Spend recorded against a cascade in its current cap period.
+
+  The cap is on the cascade, not the loan, because it is the lender's exposure
+  on one card across everywhere they lent.
+  """
+  def spend_in_period(%Cascade{spend_cap: nil}), do: 0
+
+  def spend_in_period(%Cascade{} = cascade) do
+    since = period_start(cascade.cap_period)
+
+    Repo.one(
+      from u in Usage,
+        where: u.cascade_id == ^cascade.id and u.occurred_at >= ^since,
+        select: coalesce(sum(u.cost_estimate), 0)
+    ) || 0
+  end
+
+  @doc "Per-entity breakdown of what a credential was spent on — the meter."
+  def usage_for_credential(credential_id) do
+    Repo.all(
+      from u in Usage,
+        where: u.credential_id == ^credential_id,
+        group_by: u.entity_id,
+        select: %{
+          entity_id: u.entity_id,
+          calls: count(u.id),
+          units: coalesce(sum(u.units), 0),
+          cost_estimate: coalesce(sum(u.cost_estimate), 0)
+        }
+    )
+  end
+
+  defp cap_exceeded?(%Cascade{spend_cap: nil}), do: false
+
+  defp cap_exceeded?(%Cascade{spend_cap: cap} = cascade),
+    do: spend_in_period(cascade) >= cap
+
+  defp period_start(nil), do: ~U[1970-01-01 00:00:00Z]
+
+  defp period_start("day"),
+    do: DateTime.utc_now() |> DateTime.add(-24 * 3600) |> DateTime.truncate(:second)
+
+  defp period_start("month"),
+    do: DateTime.utc_now() |> DateTime.add(-30 * 24 * 3600) |> DateTime.truncate(:second)
 
   defp valid_period?(terms) do
     case Map.get(terms, :cap_period) do

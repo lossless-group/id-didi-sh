@@ -14,7 +14,7 @@ defmodule IdDidiSh.Accounts do
 
   alias IdDidiSh.Repo
   alias IdDidiSh.UUID7
-  alias IdDidiSh.Accounts.{User, Membership, LoginToken, Session, UserEmail, Organization}
+  alias IdDidiSh.Accounts.{User, Membership, LoginToken, Session, UserEmail, Organization, App}
 
   @rand_bytes 32
 
@@ -263,6 +263,59 @@ defmodule IdDidiSh.Accounts do
   end
 
   def redeem_magic_link(_), do: {:error, :invalid_token}
+
+  ## Apps (server-to-server consumers)
+
+  def get_app(slug) when is_binary(slug), do: Repo.get(App, slug)
+  def get_app(_), do: nil
+
+  def upsert_app(slug, name) do
+    now = DateTime.truncate(now(), :second)
+
+    Repo.insert(
+      %App{slug: slug, name: name, inserted_at: now, updated_at: now},
+      on_conflict: {:replace, [:name, :updated_at]},
+      conflict_target: [:slug]
+    )
+  end
+
+  @doc """
+  Mint a server-to-server token for a registered app.
+
+  Returned raw exactly once — only the hash is stored, same discipline as magic
+  links. Re-issuing replaces the previous token, which is also how you revoke.
+  """
+  def issue_app_token(slug) do
+    case get_app(slug) do
+      nil ->
+        {:error, :unknown_app}
+
+      app ->
+        raw = :crypto.strong_rand_bytes(@rand_bytes) |> Base.url_encode64(padding: false)
+        now = DateTime.truncate(now(), :second)
+
+        {:ok, app} =
+          app
+          |> Ecto.Changeset.change(token_hash: hash(raw), token_issued_at: now, updated_at: now)
+          |> Repo.update()
+
+        {:ok, raw, app}
+    end
+  end
+
+  @doc """
+  Authenticate a raw app token. Disabled apps are refused even with a valid
+  token — the flag is the off switch.
+  """
+  def authenticate_app(raw) when is_binary(raw) do
+    case Repo.get_by(App, token_hash: hash(raw)) do
+      nil -> {:error, :invalid_token}
+      %App{enabled: false} -> {:error, :app_disabled}
+      app -> {:ok, app}
+    end
+  end
+
+  def authenticate_app(_), do: {:error, :invalid_token}
 
   ## Sessions
 

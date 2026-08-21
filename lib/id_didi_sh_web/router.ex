@@ -42,6 +42,19 @@ defmodule IdDidiShWeb.Router do
     get "/me", MeController, :show
   end
 
+  # Server-to-server only. The pipeline REJECTS a user session rather than
+  # ignoring it — see Plugs.RequireApp for why.
+  pipeline :api_app do
+    plug :accepts, ["json"]
+    plug IdDidiShWeb.Plugs.RequireApp
+  end
+
+  scope "/api/internal", IdDidiShWeb do
+    pipe_through :api_app
+
+    post "/resolve", ResolveController, :create
+  end
+
   # Entities — the flat tenancy primitive. Membership is required for reads,
   # admin for writes; both resolved via Entities.effective_role/2.
   scope "/api", IdDidiShWeb do
