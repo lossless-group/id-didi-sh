@@ -278,3 +278,40 @@ comes back so a human can tell two keys apart.
 
 **Not done:** no LiveView yet (increment 7). Everything a lender does is
 reachable over HTTP, but a human still needs a client to do it.
+
+## Increment 7 — a human lends a key without a terminal — ✅ PASSED 2026-08-21
+
+**Built:** `KeysLive` at `/keys`, `Plugs.PutDidiToken` (cookie → session bridge
+so a LiveView can see who is connected), 5 tests. Suite 90 → **95 passed**.
+
+**Gate:** a human pastes a key and lends it to two places, entirely in a browser.
+Driven through the real LiveView — form submit, click the lend button, tick two
+checkboxes, confirm — then asserted that the lender is `:admin` in both by
+lending.
+
+**Found a product bug while testing.** The flash message renders in the app
+layout, and this LiveView has no layout — so a failed paste showed the user
+**nothing at all**. The test caught it because the assertion looked for the
+sentence rather than for a status code. Fixed by rendering flash inside the
+LiveView itself, which is where it belongs for a standalone screen.
+
+**Decided in flight:**
+
+1. **The value is write-only in the UI too** — no reveal toggle, no masked
+   echo. `last_four` is the only hint, and a test asserts the secret never
+   appears in the rendered page. A reveal button would be the obvious feature
+   request and the wrong answer: the moment a borrower can read it, lending has
+   become giving.
+2. **Errors are sentences, not atoms.** `humanize/1` maps every failure to
+   something a person can act on — *"Give it a name so you can tell it apart
+   later"* rather than `:label_required` — with a test asserting the atom does
+   NOT appear.
+3. **The lending consequence is rendered before the confirm button is
+   reachable**, and only once at least one place is selected. Ruling 2b as
+   markup rather than as a comment.
+4. **Cookie → session bridge rather than a custom socket auth.** The token is
+   already a signed JWT; putting it in the Plug session adds no new trust and
+   avoids a second authentication path to keep correct.
+
+**Remaining:** increment 8 — first real use end to end. And the Turso cutover
+still gates deploying any of the credential work.

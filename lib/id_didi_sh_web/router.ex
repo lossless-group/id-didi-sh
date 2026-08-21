@@ -31,6 +31,14 @@ defmodule IdDidiShWeb.Router do
     post "/access", AccessController, :redeem
   end
 
+  # The lender's screen. Browser pipeline plus the cookie->session bridge, so
+  # the LiveView can see who is connected.
+  scope "/", IdDidiShWeb do
+    pipe_through [:browser, IdDidiShWeb.Plugs.PutDidiToken]
+
+    live "/keys", KeysLive
+  end
+
   # The headless API — the contract consumers call from their own UIs.
   scope "/api", IdDidiShWeb do
     pipe_through :api

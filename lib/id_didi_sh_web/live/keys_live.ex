@@ -1,0 +1,290 @@
+defmodule IdDidiShWeb.KeysLive do
+  @moduledoc """
+  The lender's screen at `/keys`.
+
+  This is the increment the whole model exists for. The persona will click a
+  link and paste one value into one labelled field; they will not open a
+  terminal, and a path that requires one fails on week two even when it works on
+  day one. Everything before this increment was reachable only by HTTP client.
+
+  Two rules the markup enforces:
+
+  1. **The value is write-only.** It goes in once and is never rendered back —
+     not masked, not behind a reveal. `last_four` is the only hint.
+  2. **The lending consequence is visible BEFORE confirming** (Ruling 2b). A
+     loan follows the entity, so it reaches whoever joins later. A lender who
+     learns that afterwards never lends again.
+  """
+
+  use IdDidiShWeb, :live_view
+
+  alias IdDidiSh.{Accounts, Credentials, Entities}
+  alias IdDidiSh.Token
+
+  @impl true
+  def mount(_params, session, socket) do
+    case current_user(session) do
+      nil ->
+        {:ok,
+         socket
+         |> put_flash(:error, "Sign in to manage your keys.")
+         |> redirect(to: ~p"/access")}
+
+      user ->
+        {:ok, socket |> assign(:user, user) |> assign_defaults() |> load()}
+    end
+  end
+
+  defp assign_defaults(socket) do
+    socket
+    |> assign(:provider, "anthropic")
+    |> assign(:label, "")
+    |> assign(:value, "")
+    |> assign(:lending, nil)
+    |> assign(:selected, MapSet.new())
+    |> assign(:spend_cap, "")
+    |> assign(:cap_period, "month")
+  end
+
+  defp load(socket) do
+    user = socket.assigns.user
+
+    socket
+    |> assign(:credentials, Credentials.list_credentials(user.didi_id))
+    |> assign(:entities, Entities.list_entities_for(user.didi_id))
+  end
+
+  ## Events
+
+  @impl true
+  def handle_event("form_change", params, socket) do
+    {:noreply,
+     socket
+     |> assign(:provider, params["provider"] || socket.assigns.provider)
+     |> assign(:label, params["label"] || "")
+     |> assign(:value, params["value"] || "")}
+  end
+
+  def handle_event("paste", %{"provider" => p, "label" => l, "value" => v}, socket) do
+    case Credentials.create_credential(socket.assigns.user.didi_id, p, l, v) do
+      {:ok, _} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "Key stored. Nobody can read it back — not even you.")
+         |> assign_defaults()
+         |> load()}
+
+      {:error, reason} ->
+        {:noreply, put_flash(socket, :error, humanize(reason))}
+    end
+  end
+
+  def handle_event("start_lending", %{"id" => id}, socket) do
+    {:noreply, socket |> assign(:lending, id) |> assign(:selected, MapSet.new())}
+  end
+
+  def handle_event("cancel_lending", _, socket) do
+    {:noreply, assign(socket, :lending, nil)}
+  end
+
+  def handle_event("toggle_entity", %{"id" => id}, socket) do
+    selected = socket.assigns.selected
+
+    selected =
+      if MapSet.member?(selected, id),
+        do: MapSet.delete(selected, id),
+        else: MapSet.put(selected, id)
+
+    {:noreply, assign(socket, :selected, selected)}
+  end
+
+  def handle_event("terms_change", params, socket) do
+    {:noreply,
+     socket
+     |> assign(:spend_cap, params["spend_cap"] || "")
+     |> assign(:cap_period, params["cap_period"] || "month")}
+  end
+
+  def handle_event("lend", _params, socket) do
+    ids = MapSet.to_list(socket.assigns.selected)
+
+    terms =
+      case Integer.parse(to_string(socket.assigns.spend_cap)) do
+        {cap, _} when cap > 0 -> %{spend_cap: cap, cap_period: socket.assigns.cap_period}
+        _ -> %{}
+      end
+
+    case Credentials.lend(socket.assigns.lending, ids, terms, socket.assigns.user.didi_id) do
+      {:ok, _cascade, loans} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "Lent to #{length(loans)} #{noun(length(loans))}.")
+         |> assign(:lending, nil)
+         |> load()}
+
+      {:error, reason} ->
+        {:noreply, put_flash(socket, :error, humanize(reason))}
+    end
+  end
+
+  def handle_event("revoke", %{"id" => id}, socket) do
+    case Credentials.revoke_credential(id, socket.assigns.user.didi_id) do
+      {:ok, _} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "Key revoked. Everything made with it stays where it is.")
+         |> load()}
+
+      {:error, reason} ->
+        {:noreply, put_flash(socket, :error, humanize(reason))}
+    end
+  end
+
+  ## Render
+
+  @impl true
+  def render(assigns) do
+    ~H"""
+    <div class="mx-auto max-w-3xl p-6 space-y-8">
+      <header>
+        <h1 class="text-2xl font-semibold">Your keys</h1>
+        <p class="text-sm opacity-70">
+          Keys stay yours. Lend one to a project and take it back whenever you like —
+          the work made with it stays put.
+        </p>
+      </header>
+
+      <%!-- Flash renders here rather than in a layout: this LiveView has none,
+            and without it a failed paste would silently do nothing. --%>
+      <div :if={Phoenix.Flash.get(@flash, :info)} class="rounded bg-green-50 p-3 text-sm">
+        {Phoenix.Flash.get(@flash, :info)}
+      </div>
+      <div :if={Phoenix.Flash.get(@flash, :error)} class="rounded bg-red-50 p-3 text-sm">
+        {Phoenix.Flash.get(@flash, :error)}
+      </div>
+
+      <section class="rounded border p-4 space-y-3">
+        <h2 class="font-medium">Add a key</h2>
+        <form id="paste-key" phx-submit="paste" phx-change="form_change" class="space-y-3">
+          <select name="provider" class="w-full rounded border p-2">
+            <option :for={p <- Credentials.providers()} value={p} selected={p == @provider}>
+              {p}
+            </option>
+          </select>
+          <input
+            name="label"
+            value={@label}
+            placeholder="What is this? e.g. Jason's Anthropic card"
+            class="w-full rounded border p-2"
+          />
+          <input
+            name="value"
+            value={@value}
+            type="password"
+            placeholder="Paste the key"
+            autocomplete="off"
+            class="w-full rounded border p-2"
+          />
+          <p class="text-xs opacity-60">
+            Stored encrypted. It is never shown again — you will only see the last four characters.
+          </p>
+          <button class="rounded bg-black px-4 py-2 text-white">Store it</button>
+        </form>
+      </section>
+
+      <section class="space-y-3">
+        <h2 class="font-medium">Stored</h2>
+        <p :if={@credentials == []} class="text-sm opacity-60">Nothing yet.</p>
+
+        <div :for={c <- @credentials} class="rounded border p-4 space-y-2">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="font-medium">{c.label}</span>
+              <span class="text-sm opacity-60">· {c.provider} · ····{c.last_four}</span>
+              <span :if={c.revoked_at} class="text-sm text-red-600">· revoked</span>
+            </div>
+            <div :if={is_nil(c.revoked_at)} class="space-x-2">
+              <button phx-click="start_lending" phx-value-id={c.id} class="rounded border px-3 py-1">
+                Lend
+              </button>
+              <button phx-click="revoke" phx-value-id={c.id} class="rounded border px-3 py-1">
+                Take it back
+              </button>
+            </div>
+          </div>
+
+          <div :if={@lending == c.id} class="rounded bg-gray-50 p-3 space-y-3">
+            <p class="text-sm font-medium">Lend to which?</p>
+            <p :if={@entities == []} class="text-sm opacity-60">
+              You are not in any projects yet.
+            </p>
+            <label :for={e <- @entities} class="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={MapSet.member?(@selected, e.id)}
+                phx-click="toggle_entity"
+                phx-value-id={e.id}
+              />
+              <span>{e.name} <span class="opacity-50">({e.kind})</span></span>
+            </label>
+
+            <form id={"terms-#{c.id}"} phx-change="terms_change" class="flex gap-2 text-sm">
+              <input
+                name="spend_cap"
+                value={@spend_cap}
+                placeholder="Spend cap (optional, in cents)"
+                class="flex-1 rounded border p-2"
+              />
+              <select name="cap_period" class="rounded border p-2">
+                <option value="month" selected={@cap_period == "month"}>per month</option>
+                <option value="day" selected={@cap_period == "day"}>per day</option>
+              </select>
+            </form>
+
+            <p :if={MapSet.size(@selected) > 0} class="rounded bg-amber-50 p-2 text-sm">
+              This lends to everyone in {MapSet.size(@selected)} {noun(MapSet.size(@selected))},
+              <strong>including anyone added later</strong>. You can take it back at any time.
+            </p>
+
+            <div class="space-x-2">
+              <button
+                phx-click="lend"
+                disabled={MapSet.size(@selected) == 0}
+                class="rounded bg-black px-4 py-2 text-white disabled:opacity-40"
+              >
+                Lend it
+              </button>
+              <button phx-click="cancel_lending" class="rounded border px-4 py-2">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+    """
+  end
+
+  ## Helpers
+
+  defp current_user(session) do
+    with token when is_binary(token) <- session["didi_token"],
+         {:ok, claims} <- Token.verify(token),
+         s when not is_nil(s) <- Accounts.get_live_session(claims.session_id) do
+      Accounts.get_user(claims.didi_id)
+    else
+      _ -> nil
+    end
+  end
+
+  defp noun(1), do: "place"
+  defp noun(_), do: "places"
+
+  # Error atoms are for programs. People get sentences.
+  defp humanize(:invalid_provider), do: "Pick a provider from the list."
+  defp humanize(:empty_value), do: "Paste the key before storing it."
+  defp humanize(:label_required), do: "Give it a name so you can tell it apart later."
+  defp humanize(:not_the_owner), do: "That key is not yours."
+  defp humanize(:not_the_lender), do: "Only whoever lent it can take it back."
+  defp humanize(:no_entities), do: "Pick at least one place to lend it to."
+  defp humanize(:credential_revoked), do: "That key has been taken back already."
+  defp humanize(other), do: "Something went wrong: #{other}"
+end
