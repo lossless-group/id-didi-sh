@@ -282,9 +282,39 @@ Beyond unit coverage, these encode the invariants and must exist by name:
 
 ## Operational notes
 
+### Storage reality, verified 2026-08-20
+
+**SQLite** (`Ecto.Adapters.SQLite3`, libSQL-compatible file) at
+`/data/id_didi_sh.db` on the Fly volume `idds_data`. App `id-didi-sh`, region
+`lax`, `shared-cpu-1x` / 512 MB, `POOL_SIZE` 5, `auto_stop_machines = off`.
+
+**Migrations run at BOOT, not as a release command.**
+`[processes] app = "sh -c '/app/bin/migrate && /app/bin/server'"` — because Fly
+release commands run on an ephemeral machine that does not mount the volume. Two
+consequences for this work: a failing migration takes the identity plane down
+rather than failing a deploy step, and every migration here must be safe to
+re-run and safe to roll forward. Test each one against a copy of the prod file
+before deploying.
+
+### 🔴 PREREQUISITE — replication before credentials (blocks increment 3)
+
+**Litestream is not configured yet.** `fly.toml` lists R2 credentials as future
+work, so **the Fly volume is currently the only copy of the database.**
+
+That is acceptable for magic links and sessions, which are recoverable by
+re-authenticating. It is **not** acceptable for credentials other people have
+lent us: losing the volume would destroy keys belonging to Jason, an advisor, or
+a client, which is precisely the failure this model exists to prevent.
+
+**Increment 3 must not ship until replication exists.** Either stand up
+Litestream → R2 first, or make a deliberate, written decision to accept the risk
+at three users. Do not let this pass silently.
+
 - **`CREDENTIAL_ENCRYPTION_KEY`** must exist before Migration 2 runs. 32 random
   bytes, base64. **Losing it means every lent credential is unrecoverable** —
   back it up where the Fly secrets are backed up, and say so in the runbook.
+  Note the recovery matrix: ciphertext lives on the volume, the key lives in Fly
+  secrets, and you need **both**. They must not share a single failure domain.
 - Add `mix id.entity` and `mix id.lend` alongside the existing `mix id.*` tasks,
   so an operator can act before increment 7's UI exists.
 - SQLite + Litestream: `credential_usage` is the only high-write table here.
