@@ -28,6 +28,7 @@ defmodule IdDidiSh.Credentials do
   alias IdDidiSh.UUID7
   alias IdDidiSh.Accounts
   alias IdDidiSh.Credentials.{Credential, Cascade, Loan, Usage}
+  alias IdDidiSh.Entities.Entity
 
   @providers ~w(anthropic openai google decile streak firecrawl tavily other)
 
@@ -268,6 +269,34 @@ defmodule IdDidiSh.Credentials do
   end
 
   @doc """
+  Live loans FROM a credential — where is this key currently reaching?
+
+  The mirror of `live_loans_for_entity/1`, and the same four-way liveness
+  join: the loan has not ended, its cascade has not ended or expired, and the
+  credential is not revoked. Joins the entity so a caller can name the place
+  without a second query, and returns the cascade id because ending one loan
+  needs it.
+  """
+  def live_loans_for_credential(credential_id) do
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+    Repo.all(
+      from l in Loan,
+        join: c in Cascade,
+        on: c.id == l.cascade_id,
+        join: cr in Credential,
+        on: cr.id == c.credential_id,
+        join: e in Entity,
+        on: e.id == l.entity_id,
+        where:
+          c.credential_id == ^credential_id and is_nil(l.ended_at) and is_nil(c.ended_at) and
+            is_nil(cr.revoked_at) and (is_nil(c.expires_at) or c.expires_at > ^now),
+        order_by: [desc: c.lent_at],
+        select: %{entity: e, cascade_id: c.id, lent_at: c.lent_at, spend_cap: c.spend_cap}
+    )
+  end
+
+  @doc """
   Does this person have a live loan to this entity? The basis of derived admin.
   """
   def lender?(entity_id, didi_id) do
@@ -293,7 +322,6 @@ defmodule IdDidiSh.Credentials do
         distinct: true
     )
   end
-
 
   ## Resolve — the only path that returns plaintext
 
@@ -334,7 +362,12 @@ defmodule IdDidiSh.Credentials do
     end
   end
 
-  defp record_and_return(%{loan: loan, cascade: cascade, credential: credential}, entity_id, app_slug, opts) do
+  defp record_and_return(
+         %{loan: loan, cascade: cascade, credential: credential},
+         entity_id,
+         app_slug,
+         opts
+       ) do
     if cap_exceeded?(cascade) do
       {:error, :cap_exceeded}
     else

@@ -51,9 +51,15 @@ defmodule IdDidiShWeb.KeysLive do
   defp load(socket) do
     user = socket.assigns.user
 
+    credentials = Credentials.list_credentials(user.didi_id)
+
     socket
-    |> assign(:credentials, Credentials.list_credentials(user.didi_id))
+    |> assign(:credentials, credentials)
     |> assign(:entities, Entities.list_entities_for(user.didi_id))
+    |> assign(
+      :loans,
+      Map.new(credentials, fn c -> {c.id, Credentials.live_loans_for_credential(c.id)} end)
+    )
   end
 
   ## Events
@@ -87,6 +93,19 @@ defmodule IdDidiShWeb.KeysLive do
 
   def handle_event("cancel_lending", _, socket) do
     {:noreply, assign(socket, :lending, nil)}
+  end
+
+  # Taking a key back from ONE place, as opposed to everywhere. Separate from
+  # revoke on purpose — they are different intentions and should be hard to
+  # confuse at three in the morning.
+  def handle_event("end_loan", %{"cascade" => cascade_id, "entity" => entity_id}, socket) do
+    case Credentials.end_loan(cascade_id, entity_id, socket.assigns.user.didi_id) do
+      :ok ->
+        {:noreply, socket |> load() |> put_flash(:info, "Taken back.")}
+
+      {:error, reason} ->
+        {:noreply, put_flash(socket, :error, humanize(reason))}
+    end
   end
 
   def handle_event("new_entity_change", params, socket) do
@@ -268,6 +287,36 @@ defmodule IdDidiShWeb.KeysLive do
               </button>
             </div>
           </div>
+
+          <%!-- Where this key currently reaches. Without it a lender has no
+                way to see whether the lend they just made actually landed. --%>
+          <div :if={@loans[c.id] not in [nil, []]} class="flex flex-wrap items-center gap-2">
+            <span class="eyebrow">Lent to</span>
+            <span
+              :for={loan <- @loans[c.id]}
+              class="inline-flex items-center gap-2 rounded border border-success/40 bg-success/10 px-2 py-1 text-sm"
+            >
+              <span>{loan.entity.name}</span>
+              <span class="mono opacity-50">{loan.entity.kind}</span>
+              <button
+                phx-click="end_loan"
+                phx-value-cascade={loan.cascade_id}
+                phx-value-entity={loan.entity.id}
+                class="opacity-60 hover:opacity-100"
+                aria-label={"Take back from #{loan.entity.name}"}
+                title={"Take back from #{loan.entity.name}"}
+              >
+                ×
+              </button>
+            </span>
+          </div>
+
+          <p
+            :if={is_nil(c.revoked_at) and @loans[c.id] in [nil, []]}
+            class="text-sm opacity-50"
+          >
+            Not lent anywhere yet.
+          </p>
 
           <div :if={@lending == c.id} class="rounded border border-base-300 bg-base-300 p-3 space-y-3">
             <p class="text-sm font-medium">Lend to which?</p>

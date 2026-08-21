@@ -187,4 +187,49 @@ defmodule IdDidiShWeb.KeysLiveTest do
       assert Entities.list_entities_for(alice.didi_id) == []
     end
   end
+
+  describe "a lender can see where a key currently reaches" do
+    test "the place it was lent to is named, and can be taken back one at a time" do
+      alice = user("alice@example.com")
+      a = entity("apollo")
+      b = entity("boreas")
+      {:ok, _} = Entities.add_member(a.id, alice.didi_id, "org_owner")
+      {:ok, _} = Entities.add_member(b.id, alice.didi_id, "org_owner")
+
+      {:ok, view, _html} = live(signed_in_conn(alice), ~p"/keys")
+
+      view
+      |> form(~s{form[phx-submit="paste"]}, %{
+        "provider" => "anthropic",
+        "label" => "Jason's card",
+        "value" => @secret
+      })
+      |> render_submit()
+
+      # Before lending, say so plainly rather than showing nothing.
+      assert render(view) =~ "Not lent anywhere yet"
+
+      view |> element(~s{button[phx-click="start_lending"]}) |> render_click()
+      view |> element(~s{input[phx-value-id="#{a.id}"]}) |> render_click()
+      view |> element(~s{input[phx-value-id="#{b.id}"]}) |> render_click()
+      html = view |> element(~s{button[phx-click="lend"]}) |> render_click()
+
+      # THE GAP: the lend landed in the database but the page never said so.
+      assert html =~ "Lent to"
+      assert html =~ "APOLLO"
+      assert html =~ "BOREAS"
+      refute html =~ "Not lent anywhere yet"
+
+      # Taking it back from one place leaves the other reaching.
+      html =
+        view
+        |> element(~s{button[phx-click="end_loan"][phx-value-entity="#{a.id}"]})
+        |> render_click()
+
+      refute html =~ "APOLLO"
+      assert html =~ "BOREAS"
+      refute Credentials.lender?(a.id, alice.didi_id)
+      assert Credentials.lender?(b.id, alice.didi_id)
+    end
+  end
 end
