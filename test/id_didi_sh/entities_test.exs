@@ -4,6 +4,7 @@ defmodule IdDidiSh.EntitiesTest do
   alias IdDidiSh.Accounts
   alias IdDidiSh.Entities
   alias IdDidiSh.Entities.Entity
+  alias IdDidiSh.Repo
 
   defp seed_user(email \\ "alice@example.com") do
     {:ok, user} = Accounts.create_user(%{primary_email: email, name: "Alice"})
@@ -12,6 +13,18 @@ defmodule IdDidiSh.EntitiesTest do
 
   defp seed_entity(slug, kind \\ "project") do
     {:ok, entity} = Entities.create_entity(%{kind: kind, slug: slug, name: String.upcase(slug)})
+    entity
+  end
+
+  defp seed_domain_entity(slug, domain) do
+    {:ok, entity} =
+      Entities.create_entity(%{
+        kind: "organization",
+        slug: slug,
+        name: String.upcase(slug),
+        default_domain: domain
+      })
+
     entity
   end
 
@@ -31,7 +44,9 @@ defmodule IdDidiSh.EntitiesTest do
 
     test "rejects a duplicate slug" do
       seed_entity("apollo")
-      assert {:error, :slug_taken} = Entities.create_entity(%{kind: "project", slug: "apollo", name: "Apollo II"})
+
+      assert {:error, :slug_taken} =
+               Entities.create_entity(%{kind: "project", slug: "apollo", name: "Apollo II"})
     end
   end
 
@@ -72,7 +87,9 @@ defmodule IdDidiSh.EntitiesTest do
       assert {:error, :unknown_user} = Entities.add_member(entity.id, "nobody", "editor")
       assert {:error, :unknown_entity} = Entities.add_member("nope", user.didi_id, "editor")
       assert {:error, :invalid_role} = Entities.add_member(entity.id, user.didi_id, "wizard")
-      assert {:error, :invalid_via} = Entities.add_member(entity.id, user.didi_id, "editor", via: "vibes")
+
+      assert {:error, :invalid_via} =
+               Entities.add_member(entity.id, user.didi_id, "editor", via: "vibes")
     end
 
     test "a person can belong to a project and nothing else" do
@@ -124,6 +141,83 @@ defmodule IdDidiSh.EntitiesTest do
       slugs = Enum.map(survivors, & &1.slug) |> Enum.sort()
 
       assert slugs == ["apollo", "q3"]
+    end
+  end
+
+  # The workspaces model (retired with `hygene/test-coverage`) guarded these
+  # with five tests. `entities` inherited `default_domain` as a COLUMN but not
+  # the guards: it is written once on create and never read again, and
+  # `effective_role/2` consults only lending and the membership row.
+  #
+  # That is correct, and nothing was asserting it. These tests are what keep it
+  # true — the failure mode is a future reader seeing the column and wiring it
+  # into `effective_role/2`, which reintroduces domain-derived membership and
+  # makes an advisor structurally inexpressible.
+  describe "default_domain is inert (the advisor invariant)" do
+    test "a matching email domain confers no access by itself" do
+      entity = seed_domain_entity("acme", "acme.com")
+      user = seed_user("bob@acme.com")
+
+      # No membership row was ever created. The domain must not stand in for one.
+      assert Entities.get_membership(entity.id, user.didi_id) == nil
+      assert Entities.effective_role(entity.id, user.didi_id) == nil
+      assert Entities.list_entities_for(user.didi_id) == []
+    end
+
+    test "an advisor at another company holds a role, and moving the domain revokes nobody" do
+      entity = seed_domain_entity("acme", "acme.com")
+      advisor = seed_user("dana@other-firm.com")
+
+      # Membership is an explicit grant; the granted person's address is
+      # irrelevant to it.
+      {:ok, _} = Entities.add_member(entity.id, advisor.didi_id, "editor")
+      assert Entities.effective_role(entity.id, advisor.didi_id) == "editor"
+
+      entity
+      |> Ecto.Changeset.change(default_domain: "somewhere-else.com")
+      |> Repo.update!()
+
+      assert Entities.effective_role(entity.id, advisor.didi_id) == "editor"
+
+      Entities.get_entity(entity.id)
+      |> Ecto.Changeset.change(default_domain: nil)
+      |> Repo.update!()
+
+      assert Entities.effective_role(entity.id, advisor.didi_id) == "editor"
+    end
+  end
+
+  describe "bookkeeping" do
+    test "slugs are compared exactly — casing yields a distinct entity" do
+      seed_entity("apollo")
+
+      # Characterisation, not endorsement. `create_entity/1` takes the slug raw
+      # and only rejects an exact duplicate, so these are two entities. The
+      # retired workspaces model normalised instead. If normalising is what we
+      # want, this test is the one that should change.
+      assert {:ok, other} =
+               Entities.create_entity(%{kind: "project", slug: "Apollo", name: "Apollo II"})
+
+      assert other.slug == "Apollo"
+      refute other.id == Entities.get_entity_by_slug("apollo").id
+    end
+
+    test "remove_member is idempotent, and via records how someone got in" do
+      user = seed_user()
+      entity = seed_entity("apollo")
+
+      {:ok, m} = Entities.add_member(entity.id, user.didi_id, "editor")
+      # via defaults to "invite" — the only account-creation path this service has.
+      assert m.via == "invite"
+
+      {:ok, m2} = Entities.add_member(entity.id, user.didi_id, "viewer", via: "auto_join")
+      assert m2.via == "invite", "on_conflict replaces role only, so via stays as first recorded"
+
+      assert :ok = Entities.remove_member(entity.id, user.didi_id)
+      assert Entities.effective_role(entity.id, user.didi_id) == nil
+      # Removing again is not an error — the caller should not have to check first.
+      assert :ok = Entities.remove_member(entity.id, user.didi_id)
+      assert Entities.effective_role(entity.id, user.didi_id) == nil
     end
   end
 end
