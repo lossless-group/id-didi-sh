@@ -57,3 +57,39 @@ mps@didi.sh is editor in project/apollo
    remove someone while blind.
 
 **Not done, deliberately:** HTTP endpoints (increment 2).
+
+## Increment 2 — entity HTTP endpoints — ✅ PASSED 2026-08-20
+
+**Built:** `IdDidiShWeb.Plugs.RequireUser`, `EntityController`, six routes under
+an `:api_authed` pipeline, 10 controller tests. Suite 39 → **49 passed**, clean
+compile.
+
+**Gate:** `DELETE /api/entities/:entity_id/members/:didi_id` returns
+`also_member_of`, and removal from one entity leaves the others intact. Both
+asserted, including the DB-level check that the surviving membership is really
+still there rather than merely reported.
+
+**Decided in flight:**
+
+1. **The disclosure ships as a rendered sentence, not just data.** The response
+   carries `also_member_of` (the list) *and* `disclosure` — "Bob will keep access
+   to: Apollo, Q3 Diligence." If every client composes its own sentence, some
+   client eventually omits it. Putting the words in the API makes the honest
+   thing the default.
+2. **Survivors are read BEFORE the delete**, so the response describes the world
+   the caller is creating rather than racing it.
+3. **Auth extracted to a plug.** `MeController` does the three-step check inline
+   (token → live session row → user). Copying that per action is how one endpoint
+   quietly loses the session-row check, so `RequireUser` does it once.
+4. **Creator becomes `org_owner`** of what they create — otherwise an entity is
+   born with nobody able to administer it. Note the vocabulary strain: `org_owner`
+   on a *project* reads oddly (plan OQ 2, still open).
+5. **Adding a non-existent user returns `unknown_user_invite_not_implemented`**
+   rather than half-creating something. The invite path through `login_tokens`
+   exists but is not wired to entities; named explicitly so it is not mistaken for
+   a bug.
+
+**Not done, deliberately:** `PATCH /api/entities/:id` (no caller yet), and
+`GET /api/users/:didi_id/entities` — `also_member_of` already covers the
+disclosure, and a general "where is this person" endpoint wants an authorization
+story of its own.

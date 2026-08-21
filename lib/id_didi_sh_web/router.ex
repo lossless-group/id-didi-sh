@@ -14,6 +14,12 @@ defmodule IdDidiShWeb.Router do
     plug :accepts, ["json"]
   end
 
+  # Authenticated JSON: verifies the didi_session cookie AND the session row.
+  pipeline :api_authed do
+    plug :accepts, ["json"]
+    plug IdDidiShWeb.Plugs.RequireUser
+  end
+
   scope "/", IdDidiShWeb do
     pipe_through :browser
 
@@ -34,6 +40,22 @@ defmodule IdDidiShWeb.Router do
     post "/session/refresh", SessionController, :refresh
     delete "/session", SessionController, :delete
     get "/me", MeController, :show
+  end
+
+  # Entities — the flat tenancy primitive. Membership is required for reads,
+  # admin for writes; both resolved via Entities.effective_role/2.
+  scope "/api", IdDidiShWeb do
+    pipe_through :api_authed
+
+    get "/entities", EntityController, :index
+    post "/entities", EntityController, :create
+    get "/entities/:id", EntityController, :show
+
+    get "/entities/:entity_id/members", EntityController, :list_members
+    post "/entities/:entity_id/members", EntityController, :add_member
+    # Returns also_member_of — the removal disclosure is part of the contract,
+    # not a UI nicety. See EntityController's moduledoc.
+    delete "/entities/:entity_id/members/:didi_id", EntityController, :delete_member
   end
 
   scope "/.well-known", IdDidiShWeb do
