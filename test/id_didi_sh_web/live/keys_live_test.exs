@@ -120,4 +120,71 @@ defmodule IdDidiShWeb.KeysLiveTest do
       refute html =~ "empty_value"
     end
   end
+
+  describe "a lender who belongs to nothing yet" do
+    test "names a place, it is created and owned by them, and lends there" do
+      alice = user("alice@example.com")
+      assert Entities.list_entities_for(alice.didi_id) == []
+
+      {:ok, view, _html} = live(signed_in_conn(alice), ~p"/keys")
+
+      view
+      |> form(~s{form[phx-submit="paste"]}, %{
+        "provider" => "anthropic",
+        "label" => "Jason's card",
+        "value" => @secret
+      })
+      |> render_submit()
+
+      [cred] = Credentials.list_credentials(alice.didi_id)
+
+      html = view |> element(~s{button[phx-click="start_lending"]}) |> render_click()
+      assert html =~ "You are not in any yet"
+
+      # Name one from the panel rather than being sent to an API a browser
+      # cannot reach.
+      view
+      |> form(~s{form[phx-submit="create_entity"]}, %{"name" => "Rural Income", "kind" => "team"})
+      |> render_submit()
+
+      assert [entity] = Entities.list_entities_for(alice.didi_id)
+      assert entity.name == "Rural Income"
+      assert entity.kind == "team"
+      # Slug is normalised for them — entities take slugs raw.
+      assert entity.slug == "rural-income"
+      # The creator owns what they created, or nobody could administer it.
+      assert Entities.effective_role(entity.id, alice.didi_id) == "org_owner"
+
+      # Pre-selected, so the next click is the one they came to make.
+      view |> element(~s{button[phx-click="lend"]}) |> render_click()
+
+      assert Credentials.lender?(entity.id, alice.didi_id)
+      assert [usage_entity] = Entities.list_entities_for(alice.didi_id)
+      assert usage_entity.id == entity.id
+      assert cred.id
+    end
+
+    test "an unnamed place is refused rather than created blank" do
+      alice = user("alice@example.com")
+      {:ok, view, _html} = live(signed_in_conn(alice), ~p"/keys")
+
+      view
+      |> form(~s{form[phx-submit="paste"]}, %{
+        "provider" => "anthropic",
+        "label" => "Jason's card",
+        "value" => @secret
+      })
+      |> render_submit()
+
+      view |> element(~s{button[phx-click="start_lending"]}) |> render_click()
+
+      html =
+        view
+        |> form(~s{form[phx-submit="create_entity"]}, %{"name" => "   ", "kind" => "project"})
+        |> render_submit()
+
+      assert html =~ "Give it a name first"
+      assert Entities.list_entities_for(alice.didi_id) == []
+    end
+  end
 end

@@ -44,6 +44,8 @@ defmodule IdDidiShWeb.KeysLive do
     |> assign(:selected, MapSet.new())
     |> assign(:spend_cap, "")
     |> assign(:cap_period, "month")
+    |> assign(:new_entity_name, "")
+    |> assign(:new_entity_kind, "project")
   end
 
   defp load(socket) do
@@ -85,6 +87,54 @@ defmodule IdDidiShWeb.KeysLive do
 
   def handle_event("cancel_lending", _, socket) do
     {:noreply, assign(socket, :lending, nil)}
+  end
+
+  def handle_event("new_entity_change", params, socket) do
+    {:noreply,
+     socket
+     |> assign(:new_entity_name, params["name"] || "")
+     |> assign(:new_entity_kind, params["kind"] || socket.assigns.new_entity_kind)}
+  end
+
+  # A lender who is in nothing yet has nowhere to lend to. Rather than send
+  # them to an API they cannot call from a browser, they name a place here and
+  # it is created, owned by them, and pre-selected to lend to.
+  def handle_event("create_entity", params, socket) do
+    # Read the submitted fields rather than the last change event — a submit
+    # carries them, and relying on assigns loses the name when a form is
+    # submitted without an intervening change.
+    name = (params["name"] || socket.assigns.new_entity_name) |> String.trim()
+    kind = params["kind"] || socket.assigns.new_entity_kind
+    user = socket.assigns.user
+
+    if name == "" do
+      {:noreply, put_flash(socket, :error, "Give it a name first.")}
+    else
+      case Entities.create_entity(%{kind: kind, slug: slugify(name), name: name}) do
+        {:ok, entity} ->
+          # The creator owns what they created — otherwise an entity is born
+          # with nobody able to administer it.
+          {:ok, _} =
+            Entities.add_member(entity.id, user.didi_id, "org_owner",
+              via: "seed",
+              granted_by: user.didi_id
+            )
+
+          {:noreply,
+           socket
+           |> assign(:new_entity_name, "")
+           |> assign(:selected, MapSet.put(socket.assigns.selected, entity.id))
+           |> load()
+           |> put_flash(:info, "Created #{entity.name}.")}
+
+        {:error, :slug_taken} ->
+          {:noreply,
+           put_flash(socket, :error, "There is already one called that. Try another name.")}
+
+        {:error, reason} ->
+          {:noreply, put_flash(socket, :error, humanize(reason))}
+      end
+    end
   end
 
   def handle_event("toggle_entity", %{"id" => id}, socket) do
@@ -222,7 +272,7 @@ defmodule IdDidiShWeb.KeysLive do
           <div :if={@lending == c.id} class="rounded border border-base-300 bg-base-300 p-3 space-y-3">
             <p class="text-sm font-medium">Lend to which?</p>
             <p :if={@entities == []} class="text-sm opacity-60">
-              You are not in any projects yet.
+              You are not in any yet — name one below and it is yours.
             </p>
             <label :for={e <- @entities} class="flex items-center gap-2 text-sm">
               <input
@@ -234,6 +284,26 @@ defmodule IdDidiShWeb.KeysLive do
               />
               <span>{e.name} <span class="opacity-50">({e.kind})</span></span>
             </label>
+
+            <form
+              id={"new-entity-#{c.id}"}
+              phx-change="new_entity_change"
+              phx-submit="create_entity"
+              class="flex flex-wrap items-center gap-2 border-t border-base-content/10 pt-3 text-sm"
+            >
+              <input
+                name="name"
+                value={@new_entity_name}
+                placeholder="Name a new one"
+                class="input input-sm flex-1 min-w-40"
+              />
+              <select name="kind" class="select select-sm">
+                <option :for={k <- Entities.Entity.kinds()} value={k} selected={k == @new_entity_kind}>
+                  {k}
+                </option>
+              </select>
+              <button type="submit" class="btn btn-sm btn-outline">Create</button>
+            </form>
 
             <form id={"terms-#{c.id}"} phx-change="terms_change" class="flex gap-2 text-sm">
               <input
@@ -296,4 +366,13 @@ defmodule IdDidiShWeb.KeysLive do
   defp humanize(:no_entities), do: "Pick at least one place to lend it to."
   defp humanize(:credential_revoked), do: "That key has been taken back already."
   defp humanize(other), do: "Something went wrong: #{other}"
+
+  # Entities take slugs raw and only reject exact duplicates, so the browser
+  # path normalises rather than handing the user a slug field to get wrong.
+  defp slugify(name) do
+    name
+    |> String.downcase()
+    |> String.replace(~r/[^a-z0-9]+/u, "-")
+    |> String.trim("-")
+  end
 end

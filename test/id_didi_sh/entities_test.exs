@@ -17,7 +17,7 @@ defmodule IdDidiSh.EntitiesTest do
 
   describe "create_entity/1" do
     test "creates entities of every kind — they are labels, not levels" do
-      for kind <- ~w(organization workspace project) do
+      for kind <- ~w(organization workspace project team) do
         assert {:ok, e} = Entities.create_entity(%{kind: kind, slug: "s-#{kind}", name: kind})
         assert e.kind == kind
         assert e.id =~ ~r/^[0-9a-f]{8}-/
@@ -25,8 +25,10 @@ defmodule IdDidiSh.EntitiesTest do
     end
 
     test "rejects an unknown kind" do
+      # Not "team" — that is a real kind now. Kinds are labels, so the list
+      # grows; the check is that it is still a closed list.
       assert {:error, :invalid_kind} =
-               Entities.create_entity(%{kind: "team", slug: "x", name: "X"})
+               Entities.create_entity(%{kind: "squad", slug: "x", name: "X"})
     end
 
     test "rejects a duplicate slug" do
