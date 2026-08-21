@@ -12,8 +12,9 @@ defmodule IdDidiSh.Accounts.MagicLinkNotifier do
   def deliver(email, raw_token) do
     identity = Application.get_env(:id_didi_sh, :identity, [])
     issuer = Keyword.get(identity, :issuer, "https://id.didi.sh")
-    # EMAIL_FROM overrides (runtime.exs) — must be onboarding@resend.dev
-    # until the didi.sh domain is verified in Resend.
+    # EMAIL_FROM overrides (runtime.exs). The didi.sh domain IS verified in
+    # Resend — self-host-stack already sends client mail from no-reply@didi.sh
+    # — so the old onboarding@resend.dev constraint no longer applies.
     from_addr = Keyword.get(identity, :email_from, "no-reply@didi.sh")
 
     new()

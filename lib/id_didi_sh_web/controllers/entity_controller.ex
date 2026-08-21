@@ -14,6 +14,7 @@ defmodule IdDidiShWeb.EntityController do
 
   alias IdDidiSh.Accounts
   alias IdDidiSh.Entities
+  alias IdDidiSh.Accounts.InviteNotifier
 
   # Roles that may administer an entity. Shared lattice with org-wide
   # memberships; see plan OQ 2 on whether projects eventually need their own.
@@ -82,26 +83,77 @@ defmodule IdDidiShWeb.EntityController do
     end
   end
 
+  @doc """
+  POST /api/entities/:entity_id/members
+
+  Two outcomes by design, and the caller is told which:
+
+  - the email already has a didi account -> membership attached immediately,
+    `201 {"member": ...}`
+  - it does not -> an invite is emailed from `no-reply@didi.sh`, and the
+    membership is attached when they redeem it, `202 {"invited": ...}`
+
+  The 202 matters. Adding someone who has never heard of didi.sh is not a
+  failure and should not read like one, but it also has not happened yet — a
+  201 would claim a member who cannot sign in.
+  """
   def add_member(conn, %{"entity_id" => entity_id} = params) do
     actor = conn.assigns.current_user
+    email = String.downcase(String.trim(params["email"] || ""))
+    role = params["role"] || "viewer"
 
-    with {:ok, _entity} <- fetch_entity(entity_id),
+    with {:ok, entity} <- fetch_entity(entity_id),
          :ok <- require_admin(conn, entity_id),
-         %{} = user <- Accounts.get_user_by_email(params["email"] || "") || :no_user,
-         {:ok, m} <-
-           Entities.add_member(entity_id, user.didi_id, params["role"] || "viewer",
-             via: "invite",
-             granted_by: actor.didi_id
-           ) do
-      conn |> put_status(:created) |> json(%{member: render_member(m)})
+         :ok <- validate_role(role) do
+      case Accounts.get_user_by_email(email) do
+        nil ->
+          invite(conn, entity, email, role, actor)
+
+        user ->
+          case Entities.add_member(entity_id, user.didi_id, role,
+                 via: "invite",
+                 granted_by: actor.didi_id
+               ) do
+            {:ok, m} -> conn |> put_status(:created) |> json(%{member: render_member(m)})
+            {:error, reason} -> error(conn, :unprocessable_entity, reason)
+          end
+      end
     else
-      # INCREMENT 2 LIMITATION: adding a person who has no didi account yet
-      # should issue an invite through the existing login_tokens path. Until
-      # that is wired, say so plainly rather than half-creating something.
-      :no_user -> error(conn, :unprocessable_entity, :unknown_user_invite_not_implemented)
-      {:error, status, reason} when is_atom(status) -> error(conn, status, reason)
-      {:error, reason} -> error(conn, :unprocessable_entity, reason)
+      {:error, status, reason} -> error(conn, status, reason)
     end
+  end
+
+  defp invite(conn, entity, email, role, actor) do
+    {:ok, raw, _token} =
+      Accounts.issue_invite(email,
+        entity_id: entity.id,
+        role: role,
+        issued_by: actor.didi_id
+      )
+
+    # Delivery failure must not silently swallow the invite — the row exists
+    # either way, so the operator can resend rather than wonder.
+    delivery =
+      case InviteNotifier.deliver(email, raw,
+             entity_name: entity.name,
+             inviter_name: actor.name || actor.primary_email
+           ) do
+        {:ok, _} -> "sent"
+        {:error, _} -> "queued_delivery_failed"
+      end
+
+    conn
+    |> put_status(:accepted)
+    |> json(%{
+      invited: %{email: email, role: role, entity_id: entity.id},
+      delivery: delivery
+    })
+  end
+
+  defp validate_role(role) do
+    if role in IdDidiSh.Accounts.Membership.roles(),
+      do: :ok,
+      else: {:error, :unprocessable_entity, :invalid_role}
   end
 
   @doc """

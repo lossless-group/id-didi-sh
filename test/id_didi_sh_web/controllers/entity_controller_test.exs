@@ -94,7 +94,7 @@ defmodule IdDidiShWeb.EntityControllerTest do
       assert json_response(conn, 403)["error"] == "not_an_admin"
     end
 
-    test "adding an unknown email says the invite path is not implemented" do
+    test "adding an unknown email invites them (202), rather than adding a member" do
       alice = seed_user("alice@example.com", "Alice")
       entity = create_entity(alice, "project", "apollo", "Apollo")
 
@@ -104,7 +104,9 @@ defmodule IdDidiShWeb.EntityControllerTest do
           "role" => "editor"
         })
 
-      assert json_response(conn, 422)["error"] == "unknown_user_invite_not_implemented"
+      # 202, not 201: the invite is out, but they are not a member until they
+      # redeem it. Full round-trip lives in InviteFlowTest.
+      assert json_response(conn, 202)["invited"]["email"] == "nobody@example.com"
     end
   end
 

@@ -7,6 +7,7 @@ defmodule IdDidiSh.Accounts.LoginToken do
     field :email, :string
     field :didi_id, :string
     field :org_id, :string
+    field :entity_id, :string
     field :role, :string
     field :app_slug, :string
     field :next_path, :string

@@ -93,3 +93,41 @@ still there rather than merely reported.
 `GET /api/users/:didi_id/entities` — `also_member_of` already covers the
 disclosure, and a general "where is this person" endpoint wants an authorization
 story of its own.
+
+## Increment 2b — invite by email — ✅ PASSED 2026-08-20
+
+Not in the original plan. Added because increment 2 shipped a limitation
+(`unknown_user_invite_not_implemented`) and the machinery to close it already
+existed: `login_tokens` carries `kind ∈ magic_link | invite`, and the Resend
+adapter is wired.
+
+**Built:** migration adding `login_tokens.entity_id`; `Accounts.issue_invite/2`
+and `redeem_invite/1`; `InviteNotifier`; `AccessController` redeeming either
+token kind; `EntityController.add_member` inviting when the email is unknown.
+Suite 49 → **55 passed**.
+
+**Gate:** invite an unknown email → 202 + mail from `no-reply@didi.sh` → redeem
+→ account created **and** membership attached. Asserted end to end, including
+that the invite is single-use.
+
+**Decided in flight:**
+
+1. **202, not 201, for an invite.** Adding someone who has never heard of
+   didi.sh is not a failure and must not read like one — but it has not happened
+   yet either. A 201 would claim a member who cannot sign in.
+2. **One landing page, two token kinds.** `/access` tries magic-link then
+   invite. The person clicking cannot tell which they hold, so the page must not
+   care. Both claims are atomic in their own query, so trying one then the other
+   cannot double-claim.
+3. **Invite TTL is 7 days**, against 15 minutes for a magic link. An invite is
+   often read days later; a sign-in link is used immediately.
+4. **Membership attachment is recorded either way** — `invite_membership_attached`
+   or `invite_membership_failed` in `auth_events`. A person stranded outside the
+   thing they were invited to should leave a trace rather than a silence.
+5. **Delivery failure does not lose the invite.** The token row exists whether or
+   not the mail sends; the response says `queued_delivery_failed` so an operator
+   can resend rather than wonder.
+
+**Stale comment corrected:** `MagicLinkNotifier` said the sender must stay
+`onboarding@resend.dev` until didi.sh was verified in Resend. It is verified —
+self-host-stack already sends client mail from `no-reply@didi.sh`.

@@ -159,6 +159,84 @@ defmodule IdDidiSh.Accounts do
   end
 
   @doc """
+  Issue an INVITE token for an email that may not have an account yet.
+
+  This is the signup path: unlike `issue_magic_link/2`, which refuses unknown
+  emails to avoid enumeration, an invite is issued *by* an authenticated person
+  who is deliberately naming someone. Redeeming it creates the account.
+
+  `opts`: `:entity_id`, `:role`, `:issued_by`, `:app_slug`, `:next_path`.
+
+  Returns `{:ok, raw_token, login_token}`. The raw token is returned exactly
+  once — only its hash is stored.
+  """
+  def issue_invite(email, opts \\ []) do
+    email = String.downcase(String.trim(email))
+    raw = :crypto.strong_rand_bytes(@rand_bytes) |> Base.url_encode64(padding: false)
+    ttl_days = config(:invite_ttl_days, 7)
+
+    token = %LoginToken{
+      kind: "invite",
+      token_hash: hash(raw),
+      email: email,
+      # An invite may precede the account; didi_id is filled in on redemption.
+      didi_id: get_user_by_email(email) |> then(&(&1 && &1.didi_id)),
+      entity_id: Keyword.get(opts, :entity_id),
+      org_id: Keyword.get(opts, :org_id),
+      role: Keyword.get(opts, :role),
+      issued_by: Keyword.get(opts, :issued_by),
+      app_slug: Keyword.get(opts, :app_slug),
+      next_path: Keyword.get(opts, :next_path),
+      expires_at: DateTime.add(now(), ttl_days * 24 * 60 * 60) |> DateTime.truncate(:second)
+    }
+
+    {:ok, token} = Repo.insert(token)
+    {:ok, raw, token}
+  end
+
+  @doc """
+  Redeem an invite: single-use + TTL enforced atomically, exactly as magic
+  links are. Creates the user if the email has no account yet — this is the
+  only path that creates accounts.
+
+  Returns `{:ok, user, login_token}` or `{:error, :invalid_token}`. Attaching
+  the entity membership the invite carried is the caller's job, so this context
+  does not depend on Entities.
+  """
+  def redeem_invite(raw) when is_binary(raw) do
+    token_hash = hash(raw)
+    now = DateTime.truncate(now(), :second)
+
+    claim =
+      from t in LoginToken,
+        where:
+          t.token_hash == ^token_hash and t.kind == "invite" and
+            is_nil(t.claimed_at) and t.expires_at > ^now
+
+    case Repo.update_all(claim, set: [claimed_at: now]) do
+      {1, _} ->
+        token = Repo.one!(from t in LoginToken, where: t.token_hash == ^token_hash)
+
+        user =
+          case get_user_by_email(token.email) do
+            nil ->
+              {:ok, user} = create_user(%{primary_email: token.email})
+              user
+
+            existing ->
+              existing
+          end
+
+        {:ok, user, token}
+
+      _ ->
+        {:error, :invalid_token}
+    end
+  end
+
+  def redeem_invite(_), do: {:error, :invalid_token}
+
+  @doc """
   Redeem a magic-link token: single-use + TTL enforced atomically (the
   UPDATE claims the row only if unclaimed and unexpired). Returns
   `{:ok, user, login_token}` or `{:error, :invalid_token}`.
