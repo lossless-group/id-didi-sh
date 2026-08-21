@@ -141,7 +141,7 @@ header comment.
 **Observable:** editing one token file changes both surfaces; no file claims to
 be a copy of another.
 
-### 3. Port the tokens into Phoenix
+### 3. Port the tokens into Phoenix — DONE 2026-08-21
 
 Add `assets/css/theme.css` carrying the same two-tier tokens and the same
 three `data-mode` blocks, imported from `app.css`. Then re-point the daisyUI
@@ -159,7 +159,16 @@ Load Space Grotesk, IBM Plex Sans, and IBM Plex Mono.
 **Observable:** toggling `data-mode` on `<html>` in devtools moves the app
 through all three modes, and vibrant lands on vault-black rather than paper.
 
-### 4. Replace the Phoenix welcome page
+**How it landed.** daisyUI already owns `--color-accent`, which collides with
+the splash's token of the same name. Rather than fight it, the brand maps
+*onto* daisyUI's slots — so every daisyUI component inherits credential colour
+with no markup changes — and the didi-only concepts (security thread, guilloche
+pitch, stamp ink) are namespaced `--didi-*`. Both attributes ride `<html>` and
+are kept equal: `data-theme` for daisyUI, `data-mode` for the posture CSS and
+the splash contract. Three daisyUI themes replace the two generator ones;
+`vibrant` was added to the `dark:` custom-variant since it is dark-based.
+
+### 4. Replace the Phoenix welcome page — DONE 2026-08-21
 
 `home.html.heex` still ships the framework's logo. Replace it with the
 credential posture — and reuse the splash's actual copy and ornament rather
@@ -169,6 +178,12 @@ Fix the `<.live_title>` suffix while in the file.
 
 **Observable:** the app root no longer contains the string `EE7868`, and no
 Phoenix logo.
+
+**How it landed.** Not a second marketing page — didi.sh owns that. The app
+root is a service datasheet: the three-artifact contract, links to `/access`
+and `/keys`, and a mode switcher so the specimen can be held under each light.
+199 lines down to 113. `page_controller_test.exs` now asserts the contract
+renders and refutes the generator's tagline and coral blobs.
 
 ### 5. Dress the spike surfaces
 
