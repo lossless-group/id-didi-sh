@@ -2,8 +2,10 @@
 version: alpha
 name: didi.sh — Site
 description: >-
-  Design system for the id-didi-sh site surface. Currently identical to
-  splash/ — see "Known drift" below; the duplication is unresolved. Three-mode contract
+  Design system for didi.sh — the public landing page, served by Vercel
+  at the apex domain. Shares one design system with splash/ (the developer
+  surface on GitHub Pages) by deliberate intent, currently by file copy
+  rather than shared import. Three-mode contract
   (dark-default / light / vibrant) with a verdigris-copper-teal brand
   spine — the currency-engraving palette — over a green-black vault
   axis, Space Grotesk display over IBM Plex Sans and Mono, and a
@@ -675,4 +677,8 @@ Tracked here so it does not get rediscovered:
 
 - **`ModeToggle.astro` uses augment-it's mode vocabulary.** Its `aria-label`s read "Demo mode (vibrant)", "Operator mode (dark)", "Ledger mode (light)". The didi.sh vocabulary is **UV lamp / the vault / security paper**. The labels should be brought over.
 - **`ModeToggle.astro` falls back to `'vibrant'`** when reading the current mode, while `BaseLayout.astro` ships `data-mode="dark"`. Dark is the default; the fallback should say so.
+- **The token file is shared by copy, not by import.** `site/src/styles/theme.css`
+  and `splash/src/styles/theme.css` are byte-identical, and this file's copy still
+  carries a header comment reading `theme.css — id-didi-sh/splash`. Sharing the
+  system is correct; sharing it by duplication is what will drift.
 - **The Phoenix app does not use this system at all.** `assets/css/app.css` is stock Tailwind 4 + daisyUI with the generator's Phoenix-purple dark and Phoenix-orange light themes, and it drives `data-theme` (`light`/`dark`/`system`) rather than `data-mode` (`dark`/`light`/`vibrant`). See `context-v/plans/Bring-The-Spike-Under-The-Credential-Design-System.md`.
