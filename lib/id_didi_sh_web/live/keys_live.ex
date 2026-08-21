@@ -156,17 +156,23 @@ defmodule IdDidiShWeb.KeysLive do
 
       <%!-- Flash renders here rather than in a layout: this LiveView has none,
             and without it a failed paste would silently do nothing. --%>
-      <div :if={Phoenix.Flash.get(@flash, :info)} class="rounded bg-green-50 p-3 text-sm">
+      <div
+        :if={Phoenix.Flash.get(@flash, :info)}
+        class="rounded border border-success/40 bg-success/10 p-3 text-sm"
+      >
         {Phoenix.Flash.get(@flash, :info)}
       </div>
-      <div :if={Phoenix.Flash.get(@flash, :error)} class="rounded bg-red-50 p-3 text-sm">
+      <div
+        :if={Phoenix.Flash.get(@flash, :error)}
+        class="rounded border border-error/40 bg-error/10 p-3 text-sm"
+      >
         {Phoenix.Flash.get(@flash, :error)}
       </div>
 
-      <section class="rounded border p-4 space-y-3">
+      <section class="rounded border border-base-300 bg-base-200 p-4 space-y-3">
         <h2 class="font-medium">Add a key</h2>
         <form id="paste-key" phx-submit="paste" phx-change="form_change" class="space-y-3">
-          <select name="provider" class="w-full rounded border p-2">
+          <select name="provider" class="select w-full">
             <option :for={p <- Credentials.providers()} value={p} selected={p == @provider}>
               {p}
             </option>
@@ -175,7 +181,7 @@ defmodule IdDidiShWeb.KeysLive do
             name="label"
             value={@label}
             placeholder="What is this? e.g. Jason's Anthropic card"
-            class="w-full rounded border p-2"
+            class="input w-full"
           />
           <input
             name="value"
@@ -183,12 +189,12 @@ defmodule IdDidiShWeb.KeysLive do
             type="password"
             placeholder="Paste the key"
             autocomplete="off"
-            class="w-full rounded border p-2"
+            class="input w-full"
           />
           <p class="text-xs opacity-60">
             Stored encrypted. It is never shown again — you will only see the last four characters.
           </p>
-          <button class="rounded bg-black px-4 py-2 text-white">Store it</button>
+          <button class="btn btn-primary">Store it</button>
         </form>
       </section>
 
@@ -196,24 +202,24 @@ defmodule IdDidiShWeb.KeysLive do
         <h2 class="font-medium">Stored</h2>
         <p :if={@credentials == []} class="text-sm opacity-60">Nothing yet.</p>
 
-        <div :for={c <- @credentials} class="rounded border p-4 space-y-2">
+        <div :for={c <- @credentials} class="rounded border border-base-300 bg-base-200 p-4 space-y-2">
           <div class="flex items-center justify-between">
             <div>
               <span class="font-medium">{c.label}</span>
-              <span class="text-sm opacity-60">· {c.provider} · ····{c.last_four}</span>
-              <span :if={c.revoked_at} class="text-sm text-red-600">· revoked</span>
+              <span class="mono text-sm opacity-60">· {c.provider} · ····{c.last_four}</span>
+              <span :if={c.revoked_at} class="stamp" data-ink="dim">revoked</span>
             </div>
             <div :if={is_nil(c.revoked_at)} class="space-x-2">
-              <button phx-click="start_lending" phx-value-id={c.id} class="rounded border px-3 py-1">
+              <button phx-click="start_lending" phx-value-id={c.id} class="btn btn-sm btn-outline">
                 Lend
               </button>
-              <button phx-click="revoke" phx-value-id={c.id} class="rounded border px-3 py-1">
+              <button phx-click="revoke" phx-value-id={c.id} class="btn btn-sm btn-outline">
                 Take it back
               </button>
             </div>
           </div>
 
-          <div :if={@lending == c.id} class="rounded bg-gray-50 p-3 space-y-3">
+          <div :if={@lending == c.id} class="rounded border border-base-300 bg-base-300 p-3 space-y-3">
             <p class="text-sm font-medium">Lend to which?</p>
             <p :if={@entities == []} class="text-sm opacity-60">
               You are not in any projects yet.
@@ -224,6 +230,7 @@ defmodule IdDidiShWeb.KeysLive do
                 checked={MapSet.member?(@selected, e.id)}
                 phx-click="toggle_entity"
                 phx-value-id={e.id}
+                class="checkbox checkbox-sm"
               />
               <span>{e.name} <span class="opacity-50">({e.kind})</span></span>
             </label>
@@ -233,28 +240,30 @@ defmodule IdDidiShWeb.KeysLive do
                 name="spend_cap"
                 value={@spend_cap}
                 placeholder="Spend cap (optional, in cents)"
-                class="flex-1 rounded border p-2"
+                class="input flex-1"
               />
-              <select name="cap_period" class="rounded border p-2">
+              <select name="cap_period" class="select">
                 <option value="month" selected={@cap_period == "month"}>per month</option>
                 <option value="day" selected={@cap_period == "day"}>per day</option>
               </select>
             </form>
 
-            <p :if={MapSet.size(@selected) > 0} class="rounded bg-amber-50 p-2 text-sm">
-              This lends to everyone in {MapSet.size(@selected)} {noun(MapSet.size(@selected))},
-              <strong>including anyone added later</strong>. You can take it back at any time.
+            <p
+              :if={MapSet.size(@selected) > 0}
+              class="rounded border border-warning/40 bg-warning/10 p-2 text-sm"
+            >
+              This lends to everyone in {MapSet.size(@selected)} {noun(MapSet.size(@selected))}, <strong>including anyone added later</strong>. You can take it back at any time.
             </p>
 
             <div class="space-x-2">
               <button
                 phx-click="lend"
                 disabled={MapSet.size(@selected) == 0}
-                class="rounded bg-black px-4 py-2 text-white disabled:opacity-40"
+                class="btn btn-primary disabled:opacity-40"
               >
                 Lend it
               </button>
-              <button phx-click="cancel_lending" class="rounded border px-4 py-2">Cancel</button>
+              <button phx-click="cancel_lending" class="btn btn-ghost">Cancel</button>
             </div>
           </div>
         </div>
