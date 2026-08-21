@@ -135,4 +135,9 @@
   } else {
     this.topbar = topbar;
   }
-}.call(this, window, document));
+}.call(window, window, document));
+
+// The vendored file is a UMD/IIFE that assigns `this.topbar`. esbuild's ESM
+// import needs an explicit default export, or `import topbar from` fails with
+// "No matching export" and the whole bundle -- including LiveView -- never builds.
+export default window.topbar;

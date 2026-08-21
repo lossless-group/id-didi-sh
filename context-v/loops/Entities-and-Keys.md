@@ -315,3 +315,50 @@ LiveView itself, which is where it belongs for a standalone screen.
 
 **Remaining:** increment 8 — first real use end to end. And the Turso cutover
 still gates deploying any of the credential work.
+
+## Increment 7b — the asset build was broken, and the tests could not see it
+
+**Found by the operator clicking the thing**, which is the wrong way to find it.
+
+`/keys` rendered and then ignored every click. The credential he "saved" never
+reached the database. Server log showed the cause:
+`no route found for GET /assets/js/app.js` — the bundle was never built, so
+LiveView never connected and the page was a photograph.
+
+**Root cause, and it predates this work:** `mix assets.build` has been FAILING
+since `3e9f90e` (2026-07-06, the walking skeleton) with
+`No matching export in "vendor/topbar.js" for import "default"`. Nobody noticed
+because nothing needed JavaScript until now — headless JSON and a static
+`/access` page do not. This LiveView is simply the first thing that did.
+
+**Why 95 green tests said nothing.** `LiveViewTest` drives the server directly:
+`render_submit/1` calls `handle_event/3` in Elixir. No browser, no bundle, no
+websocket. It proves the server half and is structurally blind to whether a
+browser can reach it. The tests were not wrong; they were testing one layer.
+
+**The fix took two goes, and the second only appeared in a browser:**
+
+1. Added `export default window.topbar` — the build then succeeded and the asset
+   served 200. Looked fixed. **Was not.**
+2. The browser threw `TypeError: Cannot set properties of undefined (setting
+   'topbar')`. The vendored IIFE ends `.call(this, …)`, and in an ES module
+   top-level `this` is `undefined`, so `this.topbar = topbar` explodes at
+   runtime. Bound it to `window` explicitly.
+
+A passing build and a 200 response were both true and both insufficient. Only
+executing the page caught it.
+
+**Verified by browser drive** (Playwright, per the monorepo's Browser-Drive
+Verification doctrine): signed in, pasted a key, opened the lend panel, ticked
+places, confirmed — then checked the database. Credential persisted, cascade
+created loans to Acme and Q3, `effective_role` returned `:admin` on exactly
+those two while Apollo stayed `org_owner`.
+
+**Guardrail added:** `test/id_didi_sh_web/assets_built_test.exs` asserts
+`app.js` exists and is not suspiciously small. It does not replace a browser
+drive; it catches the cheapest version of this for two assertions. Suite 95 →
+**97 passed**.
+
+**The process lesson, recorded because it is the real one:** the doctrine says
+drive a browser BEFORE asking a human to walk the surface. I handed over a URL
+having never loaded the page. The operator became the test harness.
