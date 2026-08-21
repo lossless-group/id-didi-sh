@@ -37,11 +37,16 @@ between them describe a third.
 
 ### Three surfaces, three design languages
 
-| Surface | What it is | Design state |
+| Surface | Where it actually lives | Design state |
 |---|---|---|
-| `splash/` | Astro. **Deployed** to GitHub Pages on push to `main` (`.github/workflows/pages.yml`, `working-directory: splash`). This is the landing page. | The real thing — see below |
-| `site/` | Astro, single `index.astro`. Not deployed. | Byte-identical `theme.css` and `DESIGN.md` to `splash/`; its `theme.css` header still says `id-didi-sh/splash` |
-| `lib/id_didi_sh_web/` | The Phoenix app — the spike. `/`, `/access`, `/keys` | Stock Phoenix 1.8 generator output |
+| `site/` | **didi.sh** — `site: 'https://didi.sh'`, `base: '/'`, served by **Vercel**. The public landing page. | The real thing — see below |
+| `splash/` | **lossless-group.github.io/id-didi-sh/** — `base: '/id-didi-sh/'`, GitHub Pages on push to `main` (`.github/workflows/pages.yml`). Carries `/changelog`, `/context-v`, `/search`. | Same tokens as `site/` |
+| `lib/id_didi_sh_web/` | **Fly app `id-didi-sh`** (`fly.toml`, region `lax`). `/`, `/access`, `/keys` | Stock Phoenix 1.8 generator output |
+
+The two Astro surfaces are a **deliberate split, not a duplication**: `site/` is
+the marketing landing page on its own domain, `splash/` is the developer surface
+on Pages. `site/astro.config.mjs` says so in a comment — *"the dev surfaces live
+on the splash."* They share one design system on purpose.
 
 ### The splash design system is good, and it is already correct
 
@@ -121,15 +126,20 @@ carryover wholesale rather than editing it down — nothing in it is salvageable
 **Observable:** `grep -i augment splash/DESIGN.md` returns nothing, and the
 `colors:` block matches the Tier-1 names in `theme.css`.
 
-### 2. Resolve `site/` vs `splash/`
+### 2. Share the theme instead of copying it
 
-They are duplicates and only `splash/` ships. Either delete `site/`, or name
-the distinct role it is meant to play and fork the theme header accordingly.
-Leaving two identical copies guarantees they drift and that the next agent
-edits the one nobody deploys.
+`site/src/styles/theme.css` and `splash/src/styles/theme.css` are byte-identical,
+and `site/`'s copy still carries a header comment reading `theme.css —
+id-didi-sh/splash`. Both surfaces *should* share one design system — that part is
+correct. What is wrong is that they share it by duplication, so the next edit
+lands in one file and silently diverges the other.
 
-**Observable:** one deployed surface, and no file claiming to be a copy of
-another.
+Extract the tokens to one file both projects import (a small workspace package,
+or a relative import from a shared `design/` directory), and fix the stale
+header comment.
+
+**Observable:** editing one token file changes both surfaces; no file claims to
+be a copy of another.
 
 ### 3. Port the tokens into Phoenix
 
@@ -178,6 +188,6 @@ modes, per the browser-drive-verification pattern, before the human walk.
    the switcher component does not.
 2. **Does `data-mode` persist per user once someone is signed in**, or stay in
    `localStorage`? This is an identity service — it plausibly knows the user.
-3. **Does `site/` have a role** that justifies its existence, or is it a
-   rename artifact from `022b203` (`landing/` → `site/`) that was never
-   cleaned up?
+3. **Does the Phoenix app get a custom domain of its own** (`id.didi.sh`) with
+   its own chrome, or does it stay a headless service that consumers dress?
+   The answer changes how much of increments 4–5 is worth doing.
