@@ -16,8 +16,10 @@ defmodule IdDidiSh.Credentials do
   2. **Every use is attributed.** Without it the lender cannot make an informed
      decision about staying lent, so the rational move becomes never lending.
 
-  Lending itself (cascades, loans) arrives in increment 4; this module currently
-  covers create / list / revoke.
+  A **cascade** is one lending act naming several entities; the loans under it
+  are one per entity. The spend cap lives on the cascade because that is the
+  lender's exposure on one card; usage is attributed per entity because that is
+  the breakdown they need to read.
   """
 
   import Ecto.Query
@@ -25,7 +27,7 @@ defmodule IdDidiSh.Credentials do
   alias IdDidiSh.Repo
   alias IdDidiSh.UUID7
   alias IdDidiSh.Accounts
-  alias IdDidiSh.Credentials.Credential
+  alias IdDidiSh.Credentials.{Credential, Cascade, Loan}
 
   @providers ~w(anthropic openai google decile streak firecrawl tavily other)
 
@@ -110,6 +112,194 @@ defmodule IdDidiSh.Credentials do
 
   def live?(%Credential{revoked_at: nil}), do: true
   def live?(%Credential{}), do: false
+
+  ## Lending
+
+  @doc """
+  Lend a credential to one or more entities in a single act — a **cascade**.
+
+  The lender need NOT be a member of any target: the person with the credit card
+  is frequently not on the project (Ruling 2). A live loan confers derived
+  `:admin` on them for as long as it lasts.
+
+  `terms` accepts `:spend_cap` (minor units), `:cap_period` (`"day"` |
+  `"month"`), `:expires_at`, `:wind_down_until`.
+  """
+  def lend(credential_id, entity_ids, terms \\ %{}, lent_by)
+
+  def lend(_credential_id, [], _terms, _lent_by), do: {:error, :no_entities}
+
+  def lend(credential_id, entity_ids, terms, lent_by) when is_list(entity_ids) do
+    entity_ids = Enum.uniq(entity_ids)
+
+    cond do
+      is_nil(get_credential(credential_id)) ->
+        {:error, :unknown_credential}
+
+      not live?(get_credential(credential_id)) ->
+        {:error, :credential_revoked}
+
+      get_credential(credential_id).owner_didi_id != lent_by ->
+        # You cannot lend someone else's key. Title never moves.
+        {:error, :not_the_owner}
+
+      Enum.any?(entity_ids, &is_nil(IdDidiSh.Entities.get_entity(&1))) ->
+        {:error, :unknown_entity}
+
+      not valid_period?(terms) ->
+        {:error, :invalid_cap_period}
+
+      true ->
+        now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+        cascade = %Cascade{
+          id: UUID7.generate(),
+          credential_id: credential_id,
+          lent_by: lent_by,
+          lent_at: now,
+          spend_cap: Map.get(terms, :spend_cap),
+          cap_period: Map.get(terms, :cap_period),
+          expires_at: Map.get(terms, :expires_at),
+          wind_down_until: Map.get(terms, :wind_down_until),
+          inserted_at: now,
+          updated_at: now
+        }
+
+        {:ok, cascade} = Repo.insert(cascade)
+
+        loans =
+          Enum.map(entity_ids, fn entity_id ->
+            {:ok, loan} =
+              Repo.insert(%Loan{
+                id: UUID7.generate(),
+                cascade_id: cascade.id,
+                entity_id: entity_id,
+                inserted_at: now,
+                updated_at: now
+              })
+
+            loan
+          end)
+
+        {:ok, cascade, loans}
+    end
+  end
+
+  @doc """
+  End an entire cascade — "they take their keys". Every loan in it ends at once.
+  """
+  def end_cascade(cascade_id, by_didi_id) do
+    case Repo.get(Cascade, cascade_id) do
+      nil ->
+        {:error, :not_found}
+
+      %Cascade{lent_by: lender} when lender != by_didi_id ->
+        {:error, :not_the_lender}
+
+      %Cascade{ended_at: %DateTime{}} = c ->
+        {:ok, c}
+
+      cascade ->
+        now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+        Repo.update_all(
+          from(l in Loan, where: l.cascade_id == ^cascade_id and is_nil(l.ended_at)),
+          set: [ended_at: now, updated_at: now]
+        )
+
+        cascade
+        |> Ecto.Changeset.change(ended_at: now, updated_at: now)
+        |> Repo.update()
+    end
+  end
+
+  @doc """
+  End ONE entity's loan while the rest of the cascade survives — partial
+  withdrawal, for when one collaboration sours and the others do not.
+  """
+  def end_loan(cascade_id, entity_id, by_didi_id) do
+    case Repo.get(Cascade, cascade_id) do
+      nil ->
+        {:error, :not_found}
+
+      %Cascade{lent_by: lender} when lender != by_didi_id ->
+        {:error, :not_the_lender}
+
+      _cascade ->
+        now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+        case Repo.update_all(
+               from(l in Loan,
+                 where:
+                   l.cascade_id == ^cascade_id and l.entity_id == ^entity_id and
+                     is_nil(l.ended_at)
+               ),
+               set: [ended_at: now, updated_at: now]
+             ) do
+          {1, _} -> :ok
+          _ -> {:error, :no_live_loan}
+        end
+    end
+  end
+
+  @doc """
+  Live loans reaching an entity, newest lending act first.
+
+  "Live" means: the loan has not ended, its cascade has not ended or expired,
+  and the credential behind it has not been revoked. All four can end a loan
+  independently, which is why this is one query rather than four checks
+  scattered across callers.
+  """
+  def live_loans_for_entity(entity_id) do
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+    Repo.all(
+      from l in Loan,
+        join: c in Cascade,
+        on: c.id == l.cascade_id,
+        join: cr in Credential,
+        on: cr.id == c.credential_id,
+        where:
+          l.entity_id == ^entity_id and is_nil(l.ended_at) and is_nil(c.ended_at) and
+            is_nil(cr.revoked_at) and (is_nil(c.expires_at) or c.expires_at > ^now),
+        order_by: [desc: c.lent_at],
+        select: %{loan: l, cascade: c, credential: cr}
+    )
+  end
+
+  @doc """
+  Does this person have a live loan to this entity? The basis of derived admin.
+  """
+  def lender?(entity_id, didi_id) do
+    entity_id
+    |> live_loans_for_entity()
+    |> Enum.any?(fn %{cascade: c} -> c.lent_by == didi_id end)
+  end
+
+  @doc "Entities this person currently lends to — access without membership."
+  def entities_lent_to(didi_id) do
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+    Repo.all(
+      from l in Loan,
+        join: c in Cascade,
+        on: c.id == l.cascade_id,
+        join: cr in Credential,
+        on: cr.id == c.credential_id,
+        where:
+          c.lent_by == ^didi_id and is_nil(l.ended_at) and is_nil(c.ended_at) and
+            is_nil(cr.revoked_at) and (is_nil(c.expires_at) or c.expires_at > ^now),
+        select: l.entity_id,
+        distinct: true
+    )
+  end
+
+  defp valid_period?(terms) do
+    case Map.get(terms, :cap_period) do
+      nil -> true
+      p -> p in Cascade.periods()
+    end
+  end
 
   @doc """
   The ONLY serializer for a credential.

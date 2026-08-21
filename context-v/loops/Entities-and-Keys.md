@@ -171,3 +171,42 @@ neither of two secrets.
 before the Turso cutover, so no lent credential is ever written to the
 unreplicated Fly volume. Writing the code does not breach that; deploying it
 would.
+
+## Increment 4 — lending: cascades, loans, derived admin — ✅ PASSED 2026-08-20
+
+**Built:** `lend/4`, `end_cascade/2`, `end_loan/3`, `live_loans_for_entity/1`,
+`lender?/2`, `entities_lent_to/1`; `Entities.effective_role/2` now returns
+`:admin` for live lenders; 11 tests. Suite 65 → **75 passed**.
+
+**Gate:** lending to three entities in one act creates **one cascade and three
+loans**, the lender is `:admin` in all three **with no membership row anywhere**
+(asserted with `refute get_membership/2`), ending the cascade removes admin
+everywhere at once, and ending one loan leaves the others live. All four
+observed.
+
+**Closed an issue rather than deferring it.**
+`also-member-of-Will-Miss-Lenders.md` predicted the removal disclosure would
+under-report once lending conferred access. It would have. Fixed in the same
+increment that created the risk: `list_entities_for/1` and `also_member_of/2`
+now union memberships with entities the person lends to, with a test asserting
+that removing Bob from Acme discloses he still reaches Apollo *by lending*.
+Issue deleted.
+
+**Decided in flight:**
+
+1. **"Live" is one query, not four scattered checks.** A loan is live only if
+   the loan has not ended, its cascade has not ended, the cascade has not
+   expired, **and** the credential is not revoked. Four independent ways to die,
+   so `live_loans_for_entity/1` joins all of it once. Callers cannot forget a
+   condition because they never see them.
+2. **Revoking a credential ends access without touching loan rows.** The join
+   handles it, so history stays intact — you can still see what was lent to whom
+   before the key was pulled.
+3. **You cannot lend a key you do not own** (`:not_the_owner`), and only the
+   lender may end a cascade or loan (`:not_the_lender`). Title never moves; an
+   entity admin cannot confiscate.
+4. **Cap terms are stored but not enforced yet** — enforcement is increment 6,
+   with the metering. Storing them now means no schema change then.
+
+**Not done:** `wind_down_until` is stored and ignored (plan OQ 5 — decide whether
+v1 honours it or drops the column).

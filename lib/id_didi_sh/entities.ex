@@ -83,20 +83,20 @@ defmodule IdDidiSh.Entities do
   end
 
   @doc """
-  Entities a person is a member of.
+  Entities a person can reach: those they are a member of, UNION those they
+  currently lend a credential to.
 
-  Note: this is membership only. Someone may also have *access* to an entity
-  purely by lending it a credential (see `effective_role/2`); once the
-  credentials context exists this should union those in.
+  The union is not cosmetic. A lender with no membership row still has admin
+  (Ruling 2), and a list that omitted them would show someone an empty screen
+  for something they are actively paying for.
   """
   def list_entities_for(didi_id) when is_binary(didi_id) do
-    Repo.all(
-      from e in Entity,
-        join: m in EntityMembership,
-        on: m.entity_id == e.id,
-        where: m.didi_id == ^didi_id,
-        order_by: [asc: e.name]
-    )
+    member_ids =
+      Repo.all(from m in EntityMembership, where: m.didi_id == ^didi_id, select: m.entity_id)
+
+    ids = Enum.uniq(member_ids ++ IdDidiSh.Credentials.entities_lent_to(didi_id))
+
+    Repo.all(from e in Entity, where: e.id in ^ids, order_by: [asc: e.name])
   end
 
   ## Memberships
@@ -187,20 +187,23 @@ defmodule IdDidiSh.Entities do
   end
 
   @doc """
-  Every OTHER entity this person still belongs to.
+  Every OTHER entity this person can still reach — by membership OR by lending.
 
   Exists for the removal disclosure required by Ruling 1b: removing Alice from
   Acme must tell you she keeps access to Apollo and Q3 Diligence, or whoever
   clicked remove believes they offboarded someone who did not leave.
+
+  Counting lenders is the whole point. A membership-only answer would produce
+  exactly that false belief, stated as fact, at the moment it matters most.
   """
   def also_member_of(didi_id, excluding_entity_id) do
-    Repo.all(
-      from e in Entity,
-        join: m in EntityMembership,
-        on: m.entity_id == e.id,
-        where: m.didi_id == ^didi_id and e.id != ^excluding_entity_id,
-        order_by: [asc: e.name]
-    )
+    ids =
+      didi_id
+      |> list_entities_for()
+      |> Enum.map(& &1.id)
+      |> Enum.reject(&(&1 == excluding_entity_id))
+
+    Repo.all(from e in Entity, where: e.id in ^ids, order_by: [asc: e.name])
   end
 
   @doc """
@@ -212,13 +215,16 @@ defmodule IdDidiSh.Entities do
   assigned role or nil. The shape is here so callers do not have to change.
   """
   def effective_role(entity_id, didi_id) do
-    # INCREMENT 4 adds the first clause: if the person has a live credential
-    # loan to this entity, return :admin regardless of membership. Deliberately
-    # not stubbed — a stub that always returns false is a dead branch that
-    # lies to the reader and to the type checker.
-    case get_membership(entity_id, didi_id) do
-      nil -> nil
-      m -> m.role
+    # Lending confers admin, membership row or not — the person with the credit
+    # card is frequently not on the project (Ruling 2). Derived at call time so
+    # it recedes on its own when the loan ends.
+    if IdDidiSh.Credentials.lender?(entity_id, didi_id) do
+      :admin
+    else
+      case get_membership(entity_id, didi_id) do
+        nil -> nil
+        m -> m.role
+      end
     end
   end
 end
