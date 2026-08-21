@@ -69,6 +69,16 @@ defmodule IdDidiShWeb.Router do
     # Returns also_member_of — the removal disclosure is part of the contract,
     # not a UI nicety. See EntityController's moduledoc.
     delete "/entities/:entity_id/members/:didi_id", EntityController, :delete_member
+
+    # The lender's surface: paste, lend, watch, take back. No action here can
+    # emit a credential's value — see CredentialController's moduledoc.
+    get "/credentials", CredentialController, :index
+    post "/credentials", CredentialController, :create
+    delete "/credentials/:id", CredentialController, :delete
+    get "/credentials/:credential_id/usage", CredentialController, :usage
+    post "/credentials/:credential_id/cascades", CredentialController, :lend
+    delete "/cascades/:id", CredentialController, :end_cascade
+    delete "/cascades/:id/loans/:entity_id", CredentialController, :end_loan
   end
 
   scope "/.well-known", IdDidiShWeb do

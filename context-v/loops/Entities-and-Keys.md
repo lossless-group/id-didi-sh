@@ -249,3 +249,32 @@ request and says why.
 
 **Not done:** `usage_for_credential/1` exists but no endpoint exposes it — that
 is increment 6, along with deciding who may read it (issue: plan OQ 4).
+
+## Increment 6 — the lender's surface — ✅ PASSED 2026-08-21
+
+**Built:** `CredentialController` with seven routes — paste, list, revoke, lend
+(cascade), pull cascade, pull one loan, usage; 8 tests. Suite 83 → **90 passed**.
+
+**Gate:** the value appears in no response body — asserted over the raw
+serialized response for create, list AND usage, not over the struct. `last_four`
+comes back so a human can tell two keys apart.
+
+**Decided in flight:**
+
+1. **Usage is OWNER-ONLY** — plan OQ 4, decided. Not even an entity admin can
+   read it, and there is a test asserting that. The meter answers *"what is my
+   card paying for, and for whom"*; showing per-caller detail to an entity admin
+   would tell them who used what without those people having agreed to it. An
+   aggregate view for admins can be added if someone actually wants it — the
+   narrower default is the recoverable mistake.
+2. **Lending returns a `notice` naming the consequence:** *"This lends to
+   everyone in 3 entities, including anyone added later."* Ruling 2b requires the
+   lending UI to say this out loud; putting it in the API means every client
+   says it, including ones nobody has written.
+3. **Partial withdrawal and full withdrawal are separate routes**
+   (`DELETE /cascades/:id/loans/:entity_id` vs `DELETE /cascades/:id`) rather
+   than one route with a flag. Taking a key back from everywhere and taking it
+   back from one place are different intentions and should be hard to confuse.
+
+**Not done:** no LiveView yet (increment 7). Everything a lender does is
+reachable over HTTP, but a human still needs a client to do it.
