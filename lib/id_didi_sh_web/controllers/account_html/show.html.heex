@@ -1,0 +1,108 @@
+<div style="max-width: 34rem; margin: 8vh auto 4rem; padding: 0 1.5rem; font-family: ui-sans-serif, system-ui;">
+  <p style="font-family: ui-monospace, monospace; font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.6;">
+    didi.sh · your credential
+  </p>
+  <h1 style="font-size: 1.5rem; margin-top: 0.75rem;">Account</h1>
+
+  <!-- Identity ------------------------------------------------------------->
+  <section style="margin-top: 2rem;">
+    <p style="font-family: ui-monospace, monospace; font-size: 0.68rem; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.5;">
+      Identity
+    </p>
+    <dl style="margin: 0.6rem 0 0; display: grid; grid-template-columns: 8rem 1fr; gap: 0.4rem 1rem; font-size: 0.9rem;">
+      <dt style="opacity: 0.6;">Email</dt>
+      <dd style="margin: 0;"><strong>{@user.primary_email}</strong></dd>
+
+      <%= if @alt_emails != [] do %>
+        <dt style="opacity: 0.6;">Also</dt>
+        <dd style="margin: 0;">{Enum.join(@alt_emails, ", ")}</dd>
+      <% end %>
+
+      <dt style="opacity: 0.6;">Name</dt>
+      <dd style="margin: 0;">{@user.name || "—"}</dd>
+
+      <dt style="opacity: 0.6;">Handle</dt>
+      <dd style="margin: 0;">{@user.handle || "—"}</dd>
+
+      <dt style="opacity: 0.6;">didi_id</dt>
+      <dd style="margin: 0; font-family: ui-monospace, monospace; font-size: 0.78rem; word-break: break-all;">
+        {@user.didi_id}
+      </dd>
+    </dl>
+  </section>
+
+  <!-- Entities ------------------------------------------------------------->
+  <section style="margin-top: 2rem;">
+    <p style="font-family: ui-monospace, monospace; font-size: 0.68rem; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.5;">
+      Entities · {length(@entities)}
+    </p>
+
+    <%= if @entities == [] do %>
+      <p style="margin-top: 0.6rem; font-size: 0.9rem; opacity: 0.7;">
+        No memberships yet. An entity is granted, never inferred from your email
+        domain — so an empty list here means nobody has added you, not that
+        something failed.
+      </p>
+    <% else %>
+      <ul style="margin: 0.6rem 0 0; padding: 0; list-style: none;">
+        <%= for e <- @entities do %>
+          <li style="display: flex; align-items: baseline; gap: 0.75rem; padding: 0.55rem 0; border-bottom: 1px solid rgba(128,128,128,0.18);">
+            <span style="font-family: ui-monospace, monospace; font-size: 0.78rem; opacity: 0.55; min-width: 4.5rem;">
+              {e.role}
+            </span>
+            <span style="flex: 1;">
+              <strong>{e.name || e.id}</strong>
+              <%= if e.slug do %>
+                <span style="font-family: ui-monospace, monospace; font-size: 0.75rem; opacity: 0.5;">
+                  &nbsp;[{e.slug}]
+                </span>
+              <% end %>
+            </span>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </section>
+
+  <!-- Keys ----------------------------------------------------------------->
+  <section style="margin-top: 2rem;">
+    <p style="font-family: ui-monospace, monospace; font-size: 0.68rem; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.5;">
+      Keys
+    </p>
+    <p style="margin-top: 0.6rem; font-size: 0.9rem;">
+      <%= if @token_verified do %>
+        <span style="color: #4ecf95;">▣</span> Your session token verified against
+        the signing key just now — the same check a consumer service performs
+        locally.
+      <% else %>
+        <span style="color: #b4552d;">▣</span> Token did not verify.
+      <% end %>
+    </p>
+    <p style="margin-top: 0.5rem; font-size: 0.82rem; opacity: 0.7;">
+      Public keys: <a href={@jwks_url}>{@jwks_url}</a>
+    </p>
+    <p style="margin-top: 0.5rem; font-size: 0.82rem;">
+      <a href="/keys">Lent credentials →</a>
+    </p>
+  </section>
+
+  <!-- Session -------------------------------------------------------------->
+  <section style="margin-top: 2rem;">
+    <p style="font-family: ui-monospace, monospace; font-size: 0.68rem; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.5;">
+      Session
+    </p>
+    <dl style="margin: 0.6rem 0 0; display: grid; grid-template-columns: 8rem 1fr; gap: 0.4rem 1rem; font-size: 0.9rem;">
+      <dt style="opacity: 0.6;">Expires</dt>
+      <dd style="margin: 0;">{@session.expires_at}</dd>
+      <dt style="opacity: 0.6;">Session id</dt>
+      <dd style="margin: 0; font-family: ui-monospace, monospace; font-size: 0.78rem; word-break: break-all;">
+        {@session.id}
+      </dd>
+    </dl>
+  </section>
+
+  <p style="margin-top: 2.5rem; font-size: 0.8rem; opacity: 0.55;">
+    This page is the browser view of <code>GET /api/me</code> — same data, same
+    source. <a href="https://didi.sh/">didi.sh</a>
+  </p>
+</div>

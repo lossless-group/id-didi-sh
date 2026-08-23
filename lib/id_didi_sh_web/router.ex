@@ -36,6 +36,10 @@ defmodule IdDidiShWeb.Router do
     # `POST /api/magic-links` directly and never link here.
     get "/auth", AuthController, :new
     post "/auth", AuthController, :create
+
+    # What the credential resolves to: identity, entities, keys. Signing in used
+    # to end at "your session is live", which is true and unverifiable.
+    get "/account", AccountController, :show
   end
 
   # The lender's screen. Browser pipeline plus the cookie->session bridge, so
