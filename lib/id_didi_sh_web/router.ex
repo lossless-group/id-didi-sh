@@ -29,6 +29,13 @@ defmodule IdDidiShWeb.Router do
     # mail-scanner prefetch can't burn a single-use link.
     get "/access", AccessController, :show
     post "/access", AccessController, :redeem
+
+    # The hosted front door. didi.sh and the splash both advertise "one login"
+    # and had nowhere to send anyone — a call-to-action with no destination is
+    # worse than none. Apps with their own login screen still call
+    # `POST /api/magic-links` directly and never link here.
+    get "/auth", AuthController, :new
+    post "/auth", AuthController, :create
   end
 
   # The lender's screen. Browser pipeline plus the cookie->session bridge, so
