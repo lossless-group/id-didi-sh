@@ -40,6 +40,10 @@ defmodule IdDidiShWeb.Router do
     # What the credential resolves to: identity, entities, keys. Signing in used
     # to end at "your session is live", which is true and unverifiable.
     get "/account", AccountController, :show
+    post "/account/profile", AccountController, :update_profile
+    post "/account/emails", AccountController, :add_alias
+    post "/account/entities", AccountController, :add_entity
+    post "/account/entities/:entity_id/members", AccountController, :add_member
   end
 
   # The lender's screen. Browser pipeline plus the cookie->session bridge, so

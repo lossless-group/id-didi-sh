@@ -59,6 +59,21 @@ defmodule IdDidiSh.Accounts do
     Repo.all(from e in UserEmail, where: e.didi_id == ^didi_id, select: e.email)
   end
 
+  @doc """
+  Update the profile fields a person owns: display name and handle.
+
+  Email is deliberately not here — an address is added as an alias and verified,
+  never edited in place, because editing one would silently move an identity.
+  """
+  def update_profile(%User{} = user, attrs) do
+    user
+    |> User.changeset(%{
+      name: attrs[:name] || attrs["name"] || user.name,
+      handle: attrs[:handle] || attrs["handle"] || user.handle
+    })
+    |> Repo.update()
+  end
+
   def create_user(attrs) do
     %User{}
     |> User.changeset(Map.put_new(attrs, :didi_id, UUID7.generate()))
