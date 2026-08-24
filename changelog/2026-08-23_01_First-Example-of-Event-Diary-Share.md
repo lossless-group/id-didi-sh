@@ -1,7 +1,7 @@
 ---
 date_created: 2026-08-23
 date_modified: 2026-08-23
-title: "A front door, and a page that does something"
+title: "First example of event diary share"
 lede: "The site said one login and had nowhere to perform one. Now there is a sign-in, and an account page you can actually act on."
 publish: true
 date_authored_initial_draft: 2026-08-23
@@ -40,7 +40,7 @@ files_changed:
   - splash/src/components/Header.astro
 ---
 
-# A front door, and a page that does something
+# First example of event diary share
 
 ## Why Care?
 
