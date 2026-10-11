@@ -16,7 +16,7 @@ at_semantic_version: 0.0.0.1
 status: Ready
 issue_reference: context-v/issues/Claude-Connectors-Need-didi-sh-to-Be-an-OAuth-Server.md
 consumer_spec: memopop-orchestrator/context-v/specs/MemoPop-Connector-API.md
-branch: feature/oauth-for-connectors
+branch: feature/oauth-for-connectors (from main, this repo's working branch)
 site_uuid: 7274b371-1f6d-4648-a137-45b3aa873096
 hex_code: e9asg4
 tags:
@@ -91,9 +91,15 @@ pass; if one can't pass honestly, stop and report.
 
 ## Rules and done
 
-- Work on `feature/oauth-for-connectors` from `development`. Don't push to
-  `main` or `master`, and **don't deploy**; the VP Eng deploys with the
-  operator's approval.
+- Work on `feature/oauth-for-connectors` from `main` (this repo's working
+  branch, per its CLAUDE.md). Don't push to `main` or `master`, and **don't
+  deploy**; the VP Eng merges and deploys with the operator's approval.
+- **Invariant 4 (headless-first) is extended, deliberately and minimally.** An
+  authorization server has to host `/oauth/authorize`; Claude can't render
+  our login. Keep it to the sign-in hop and one consent screen, reuse the
+  existing `/access` and magic-link pages, and say so in the changelog.
+- The `didi_session` cookie, `/api`, and the JWKS contract don't change. The
+  access tokens are a new artifact signed with the same key.
 - `mix test` green (record the count before and after), `mix format --check-formatted`,
   `mix compile --warnings-as-errors`.
 - A changelog entry per this repo's `changelog/` convention, honest about what
