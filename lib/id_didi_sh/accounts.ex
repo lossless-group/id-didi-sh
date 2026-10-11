@@ -164,7 +164,7 @@ defmodule IdDidiSh.Accounts do
           email: user.primary_email,
           didi_id: user.didi_id,
           app_slug: Keyword.get(opts, :app_slug),
-          next_path: Keyword.get(opts, :next_path),
+          next_path: opts |> Keyword.get(:next_path) |> IdDidiSh.RedirectTarget.sanitize(),
           expires_at: DateTime.add(now(), ttl_min * 60) |> DateTime.truncate(:second)
         }
 
@@ -201,7 +201,7 @@ defmodule IdDidiSh.Accounts do
       role: Keyword.get(opts, :role),
       issued_by: Keyword.get(opts, :issued_by),
       app_slug: Keyword.get(opts, :app_slug),
-      next_path: Keyword.get(opts, :next_path),
+      next_path: opts |> Keyword.get(:next_path) |> IdDidiSh.RedirectTarget.sanitize(),
       expires_at: DateTime.add(now(), ttl_days * 24 * 60 * 60) |> DateTime.truncate(:second)
     }
 

@@ -2,6 +2,7 @@ defmodule IdDidiShWeb.AccessController do
   use IdDidiShWeb, :controller
 
   alias IdDidiSh.Accounts
+  alias IdDidiSh.RedirectTarget
   alias IdDidiSh.Token
   alias IdDidiShWeb.SessionCookie
 
@@ -42,9 +43,11 @@ defmodule IdDidiShWeb.AccessController do
         jwt = Token.sign(user.didi_id, session.id)
         conn = SessionCookie.put(conn, jwt)
 
-        case safe_next(login_token.next_path) do
+        # Checked again here, not only at issue: a token stored before the
+        # rule existed must not become a way off the site.
+        case RedirectTarget.sanitize(login_token.next_path) do
           nil -> render(conn, :done, email: user.primary_email)
-          next -> redirect(conn, external: next)
+          next -> redirect(conn, to: next)
         end
 
       {:error, :invalid_token} ->
@@ -99,18 +102,4 @@ defmodule IdDidiShWeb.AccessController do
   end
 
   defp attach_invited_membership(_user, _token), do: :ok
-
-  # Only same-site relative paths or *.didi.sh URLs — never an open redirect.
-  defp safe_next(nil), do: nil
-  defp safe_next("/" <> _ = path), do: path
-
-  defp safe_next(url) when is_binary(url) do
-    case URI.parse(url) do
-      %URI{scheme: "https", host: host} when is_binary(host) ->
-        if host == "didi.sh" or String.ends_with?(host, ".didi.sh"), do: url, else: nil
-
-      _ ->
-        nil
-    end
-  end
 end

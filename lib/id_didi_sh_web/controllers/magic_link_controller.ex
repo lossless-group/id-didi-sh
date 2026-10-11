@@ -2,6 +2,7 @@ defmodule IdDidiShWeb.MagicLinkController do
   use IdDidiShWeb, :controller
 
   alias IdDidiSh.Accounts
+  alias IdDidiSh.RedirectTarget
   alias IdDidiSh.Token
   alias IdDidiShWeb.SessionCookie
 
@@ -17,7 +18,7 @@ defmodule IdDidiShWeb.MagicLinkController do
     result =
       Accounts.issue_magic_link(email,
         app_slug: params["app"],
-        next_path: params["next"]
+        next_path: RedirectTarget.sanitize(params["next"])
       )
 
     case result do
@@ -67,7 +68,9 @@ defmodule IdDidiShWeb.MagicLinkController do
         |> json(%{
           didi_id: user.didi_id,
           email: user.primary_email,
-          next: login_token.next_path
+          # Cleaned again on the way out: a token stored before the rule
+          # existed must not hand the consumer app an off-site destination.
+          next: RedirectTarget.sanitize(login_token.next_path)
         })
 
       {:error, :invalid_token} ->

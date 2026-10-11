@@ -63,9 +63,16 @@ defmodule IdDidiShWeb.AuthController do
 
   # The OAuth sign-in hop: /oauth/authorize sends a signed-out person here
   # with the way back, and the magic link carries it to /access. Only the
-  # authorize endpoint is a valid way back. Anything else is dropped, so this
-  # page can never be used to bounce someone to an arbitrary destination.
-  defp return_to(%{"return_to" => "/oauth/authorize?" <> _ = path}), do: path
+  # authorize endpoint is a valid way back, and it must also pass the same rule
+  # every other destination does. Anything else is dropped, so this page can
+  # never be used to bounce someone to an arbitrary destination.
+  defp return_to(%{"return_to" => value}) do
+    case IdDidiSh.RedirectTarget.sanitize(value) do
+      "/oauth/authorize?" <> _ = path -> path
+      _ -> nil
+    end
+  end
+
   defp return_to(_), do: nil
 
   defp deliver(email, raw_token) do
