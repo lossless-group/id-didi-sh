@@ -3,6 +3,7 @@ title: "Claude connectors need didi.sh to be an OAuth server"
 lede: "didi.sh knows who a person is. It can't yet tell Claude so, and MemoPop's connector is the first product waiting on that."
 date_created: 2026-10-10
 date_modified: 2026-10-10
+resolved_by: changelog/2026-10-10_01_Claude-Can-Sign-A-Partner-In-Through-didi-sh.md
 date_authored_initial_draft: 2026-10-10
 date_authored_current_draft: 2026-10-10
 authors:
@@ -10,7 +11,7 @@ authors:
 augmented_with:
   - Claude Code on Claude Opus 5.5 (1M context)
 at_semantic_version: 0.0.0.1
-status: Open
+status: Resolved
 site_uuid: d0936bf0-8b54-4931-b77a-827f75ef75c0
 hex_code: ov36b9
 summary: >-
@@ -32,6 +33,17 @@ publish: true
 ---
 
 # Claude connectors need didi.sh to be an OAuth server
+
+> **Resolved by** `feature/oauth-for-connectors` (2026-10-10), recorded in
+> [[Claude-Can-Sign-A-Partner-In-Through-didi-sh]]. id.didi.sh now serves
+> discovery, Dynamic Client Registration, authorize with S256 PKCE and one
+> consent screen, and a token endpoint with rotating refresh tokens. Access
+> tokens are EdDSA JWTs with `aud` = `https://memopop.didi.sh` and
+> `entity: {id, slug}`. Proven by OAUTH-01..10 in ExUnit. **Still open:**
+> "done when" 1-3 need a live run with a real Claude client against a deploy,
+> and 4 (an `id_token` for Onyx) isn't built. Claude supports both DCR and
+> CIMD and falls back to DCR when CIMD isn't advertised, so DCR alone was
+> implemented. The changelog explains why.
 
 ## What
 
