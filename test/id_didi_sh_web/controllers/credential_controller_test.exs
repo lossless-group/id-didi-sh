@@ -36,9 +36,13 @@ defmodule IdDidiShWeb.CredentialControllerTest do
       alice = user("alice@example.com")
       apollo = entity("apollo")
 
-      created = post(as(alice), ~p"/api/credentials", %{
-        "provider" => "anthropic", "label" => "card", "value" => @secret
-      })
+      created =
+        post(as(alice), ~p"/api/credentials", %{
+          "provider" => "anthropic",
+          "label" => "card",
+          "value" => @secret
+        })
+
       refute created |> response(201) |> String.contains?(@secret)
       assert json_response(created, 201)["credential"]["last_four"] == "7777"
 

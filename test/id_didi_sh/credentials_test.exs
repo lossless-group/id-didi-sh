@@ -85,7 +85,9 @@ defmodule IdDidiSh.CredentialsTest do
     test "a rendered list never contains the value either" do
       user = seed_user()
       {:ok, _} = Credentials.create_credential(user.didi_id, "anthropic", "one", @secret)
-      {:ok, _} = Credentials.create_credential(user.didi_id, "openai", "two", "sk-openai-abcd1234")
+
+      {:ok, _} =
+        Credentials.create_credential(user.didi_id, "openai", "two", "sk-openai-abcd1234")
 
       json =
         user.didi_id

@@ -1,4 +1,5 @@
-<% lab = "font-family: ui-monospace, monospace; font-size: 0.68rem; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.5;" %>
+<% lab =
+  "font-family: ui-monospace, monospace; font-size: 0.68rem; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.5;" %>
 <% inp =
   "width: 100%; padding: 0.5rem 0.7rem; font-size: 0.9rem; border-radius: 6px; border: 1px solid rgba(128,128,128,0.4); background: transparent; color: inherit;" %>
 <% btn =
@@ -50,7 +51,9 @@
     <%= if @alt_emails != [] do %>
       <ul style="margin: 0.6rem 0 0; padding: 0; list-style: none; font-size: 0.9rem;">
         <%= for e <- @alt_emails do %>
-          <li style="padding: 0.35rem 0; border-bottom: 1px solid rgba(128,128,128,0.15);">{e}</li>
+          <li style="padding: 0.35rem 0; border-bottom: 1px solid rgba(128,128,128,0.15);">
+            {e}
+          </li>
         <% end %>
       </ul>
     <% end %>
@@ -128,8 +131,20 @@
       <input type="hidden" name="_csrf_token" value={Plug.CSRFProtection.get_csrf_token()} />
       <p style={lab}>New entity</p>
       <div style={row}>
-        <input type="text" name="name" placeholder="Palmer AI" required style={inp <> "flex: 1; min-width: 10rem;"} />
-        <input type="text" name="slug" placeholder="palmer-ai" required style={inp <> "flex: 1; min-width: 9rem;"} />
+        <input
+          type="text"
+          name="name"
+          placeholder="Palmer AI"
+          required
+          style={inp <> "flex: 1; min-width: 10rem;"}
+        />
+        <input
+          type="text"
+          name="slug"
+          placeholder="palmer-ai"
+          required
+          style={inp <> "flex: 1; min-width: 9rem;"}
+        />
         <select name="kind" style={inp <> "width: auto;"}>
           <%= for k <- @kinds do %>
             <option value={k} selected={k == "organization"}>{k}</option>

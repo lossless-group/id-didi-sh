@@ -29,6 +29,7 @@ defmodule IdDidiSh.Repo.Migrations.CreateCredentials do
     # cascade); ending this row pulls the key from all of them at once.
     create table(:credential_cascades, primary_key: false) do
       add :id, :string, primary_key: true
+
       add :credential_id, references(:credentials, type: :string, on_delete: :delete_all),
         null: false
 
@@ -52,6 +53,7 @@ defmodule IdDidiSh.Repo.Migrations.CreateCredentials do
     # withdrawal, for when one collaboration sours and the others do not).
     create table(:credential_loans, primary_key: false) do
       add :id, :string, primary_key: true
+
       add :cascade_id, references(:credential_cascades, type: :string, on_delete: :delete_all),
         null: false
 

@@ -131,7 +131,12 @@ defmodule IdDidiShWeb.ResolveTest do
       {:ok, cred} = Credentials.create_credential(alice.didi_id, "anthropic", "card", @secret)
 
       {:ok, _cascade, _} =
-        Credentials.lend(cred.id, [apollo.id], %{spend_cap: 100, cap_period: "month"}, alice.didi_id)
+        Credentials.lend(
+          cred.id,
+          [apollo.id],
+          %{spend_cap: 100, cap_period: "month"},
+          alice.didi_id
+        )
 
       {:ok, _} = Accounts.upsert_app("augment-it", "Augment It")
       {:ok, token, _} = Accounts.issue_app_token("augment-it")

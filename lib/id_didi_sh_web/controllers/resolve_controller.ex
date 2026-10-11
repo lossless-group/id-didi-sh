@@ -32,7 +32,8 @@ defmodule IdDidiShWeb.ResolveController do
           error: "no_live_loan",
           # Say what a human should do about it, since the caller is a program
           # relaying this to somebody.
-          detail: "No live #{provider} credential is lent to this entity. Ask someone to lend one."
+          detail:
+            "No live #{provider} credential is lent to this entity. Ask someone to lend one."
         })
 
       {:error, :cap_exceeded} ->

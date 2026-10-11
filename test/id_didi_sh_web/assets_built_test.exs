@@ -27,6 +27,7 @@ defmodule IdDidiShWeb.AssetsBuiltTest do
   end
 
   test "the stylesheet exists" do
-    assert File.exists?(@app_css), "priv/static/assets/css/app.css is missing. Run `mix assets.build`."
+    assert File.exists?(@app_css),
+           "priv/static/assets/css/app.css is missing. Run `mix assets.build`."
   end
 end

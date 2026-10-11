@@ -5,11 +5,33 @@ defmodule IdDidiSh.LendingTest do
 
   @secret "sk-ant-lendingtest-4321"
 
-  defp user(email), do: (fn -> {:ok, u} = Accounts.create_user(%{primary_email: email, name: String.capitalize(hd(String.split(email, "@")))}); u end).()
+  defp user(email),
+    do:
+      (fn ->
+         {:ok, u} =
+           Accounts.create_user(%{
+             primary_email: email,
+             name: String.capitalize(hd(String.split(email, "@")))
+           })
 
-  defp entity(slug), do: (fn -> {:ok, e} = Entities.create_entity(%{kind: "project", slug: slug, name: String.upcase(slug)}); e end).()
+         u
+       end).()
 
-  defp credential(owner), do: (fn -> {:ok, c} = Credentials.create_credential(owner.didi_id, "anthropic", "card", @secret); c end).()
+  defp entity(slug),
+    do:
+      (fn ->
+         {:ok, e} =
+           Entities.create_entity(%{kind: "project", slug: slug, name: String.upcase(slug)})
+
+         e
+       end).()
+
+  defp credential(owner),
+    do:
+      (fn ->
+         {:ok, c} = Credentials.create_credential(owner.didi_id, "anthropic", "card", @secret)
+         c
+       end).()
 
   describe "lend/4 — the cascade — THE GATE" do
     test "one act, three entities: one cascade, three loans, admin in all three" do
