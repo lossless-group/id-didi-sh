@@ -76,7 +76,16 @@ config :id_didi_sh, :identity,
   session_ttl_days: 30,
   magic_link_ttl_minutes: 15,
   echo_login_tokens: false,
-  allow_dev_keys: false
+  allow_dev_keys: false,
+  # OAuth authorization server (Claude connectors). Resources are the token
+  # audiences a client may ask for (RFC 8707); add each new connector here.
+  oauth_resources: [%{uri: "https://memopop.didi.sh", name: "MemoPop"}],
+  # https redirect URIs a client may register, exact match. Loopback
+  # (localhost / 127.0.0.1, any port) is always allowed for Claude Code.
+  oauth_redirect_uris: ["https://claude.ai/api/mcp/auth_callback"],
+  oauth_access_token_ttl_seconds: 60 * 60,
+  oauth_refresh_token_ttl_days: 30,
+  oauth_code_ttl_seconds: 120
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
