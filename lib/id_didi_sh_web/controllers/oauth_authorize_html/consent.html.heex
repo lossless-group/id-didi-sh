@@ -1,0 +1,88 @@
+<% btn =
+  "padding: 0.7rem 1.6rem; font-size: 1rem; font-weight: 600; border-radius: 6px; border: 1px solid #1f9a63; background: #4ecf95; color: #06110b; cursor: pointer;" %>
+<% ghost =
+  "padding: 0.7rem 1.4rem; font-size: 1rem; border-radius: 6px; border: 1px solid rgba(128,128,128,0.4); background: transparent; color: inherit; cursor: pointer;" %>
+
+<div style="max-width: 28rem; margin: 12vh auto 4rem; padding: 0 1.5rem; font-family: ui-sans-serif, system-ui;">
+  <p style="font-family: ui-monospace, monospace; font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.6; text-align: center;">
+    didi.sh · one credential
+  </p>
+  <h1 style="font-size: 1.5rem; margin-top: 0.75rem; text-align: center;">
+    Allow <strong>{@client_name}</strong> to use {@resource_name}?
+  </h1>
+  <p style="margin-top: 0.75rem; opacity: 0.75; text-align: center;">
+    Signed in as <strong>{@user.primary_email}</strong>.
+    It will act as you in {@resource_name}, in the firm you choose.
+  </p>
+
+  <dl style="margin: 1.5rem 0 0; display: grid; grid-template-columns: 8rem 1fr; gap: 0.4rem 1rem; font-size: 0.88rem;">
+    <dt style="opacity: 0.6;">App</dt>
+    <dd style="margin: 0;">{@client_name}</dd>
+    <dt style="opacity: 0.6;">Sends you back to</dt>
+    <dd style="margin: 0; font-family: ui-monospace, monospace;">{@redirect_host}</dd>
+    <dt style="opacity: 0.6;">Product</dt>
+    <dd style="margin: 0;">
+      {@resource_name} <span style="opacity: 0.55;">({@resource_uri})</span>
+    </dd>
+  </dl>
+
+  <%= if @loopback? do %>
+    <p style="margin-top: 1rem; padding: 0.6rem 0.9rem; border-radius: 6px; background: rgba(180,85,45,0.18); font-size: 0.85rem;">
+      This app returns to a program on your own computer ({@redirect_host}). Approve only
+      if you just started this from Claude Code or another tool you trust.
+    </p>
+  <% end %>
+
+  <%= if @error do %>
+    <p style="margin-top: 1rem; color: #b4552d;">{@error}</p>
+  <% end %>
+
+  <form action="/oauth/authorize" method="post" id="oauth-consent" style="margin-top: 1.5rem;">
+    <input type="hidden" name="_csrf_token" value={Plug.CSRFProtection.get_csrf_token()} />
+    <%= for {name, value} <- @hidden do %>
+      <input type="hidden" name={name} value={value} />
+    <% end %>
+
+    <%= if @entities == [] do %>
+      <p style="opacity: 0.75;">
+        Your didi.sh account is not in any firm yet, so there is nothing to connect.
+        Ask your firm's admin to add you, then try again.
+      </p>
+      <div style="margin-top: 1.25rem; text-align: center;">
+        <button type="submit" name="decision" value="deny" style={ghost}>Cancel</button>
+      </div>
+    <% else %>
+      <fieldset style="border: 0; padding: 0; margin: 0;">
+        <legend style="font-family: ui-monospace, monospace; font-size: 0.68rem; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.5;">
+          Firm
+        </legend>
+        <%= for {e, i} <- Enum.with_index(@entities) do %>
+          <label style="display: flex; gap: 0.6rem; align-items: center; padding: 0.55rem 0.7rem; margin-top: 0.4rem; border-radius: 6px; border: 1px solid rgba(128,128,128,0.3); cursor: pointer;">
+            <input
+              type="radio"
+              name="entity_id"
+              value={e.id}
+              checked={@selected == e.id or (is_nil(@selected) and i == 0)}
+              required
+            />
+            <span>
+              <strong>{e.name}</strong>
+              <span style="opacity: 0.55; font-family: ui-monospace, monospace; font-size: 0.78rem;">
+                {e.slug}
+              </span>
+            </span>
+          </label>
+        <% end %>
+      </fieldset>
+
+      <div style="margin-top: 1.25rem; display: flex; gap: 0.6rem; justify-content: center;">
+        <button type="submit" name="decision" value="deny" style={ghost}>Deny</button>
+        <button type="submit" name="decision" value="approve" style={btn}>Allow →</button>
+      </div>
+    <% end %>
+  </form>
+
+  <p style="margin-top: 1.25rem; font-size: 0.75rem; opacity: 0.5; text-align: center;">
+    Signing out of didi.sh disconnects every app you allowed from this browser session.
+  </p>
+</div>

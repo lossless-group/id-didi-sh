@@ -13,6 +13,9 @@
 
   <form action="/auth" method="post" style="margin-top: 1.5rem;">
     <input type="hidden" name="_csrf_token" value={Plug.CSRFProtection.get_csrf_token()} />
+    <%= if @return_to do %>
+      <input type="hidden" name="return_to" value={@return_to} />
+    <% end %>
     <input
       type="email"
       name="email"

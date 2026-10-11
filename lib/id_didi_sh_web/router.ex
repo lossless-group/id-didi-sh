@@ -44,6 +44,20 @@ defmodule IdDidiShWeb.Router do
     post "/account/emails", AccountController, :add_alias
     post "/account/entities", AccountController, :add_entity
     post "/account/entities/:entity_id/members", AccountController, :add_member
+
+    # The OAuth authorization server's only pixels: the sign-in hop (above,
+    # /auth -> /access) and one consent screen. See OAuthAuthorizeController
+    # for why this is a deliberate, minimal extension of headless-first.
+    get "/oauth/authorize", OAuthAuthorizeController, :show
+    post "/oauth/authorize", OAuthAuthorizeController, :decide
+  end
+
+  # OAuth machine endpoints. No CSRF (no cookies are read) and no `accepts`
+  # gate: Claude posts form-urlencoded to /token and JSON to /register, with
+  # whatever Accept header its HTTP client sends.
+  scope "/oauth", IdDidiShWeb do
+    post "/register", OAuthRegistrationController, :create
+    post "/token", OAuthTokenController, :create
   end
 
   # The lender's screen. Browser pipeline plus the cookie->session bridge, so
@@ -108,6 +122,8 @@ defmodule IdDidiShWeb.Router do
     pipe_through :api
 
     get "/jwks.json", JWKSController, :show
+    get "/oauth-authorization-server", OAuthMetadataController, :authorization_server
+    get "/openid-configuration", OAuthMetadataController, :openid_configuration
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
