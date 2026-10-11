@@ -40,3 +40,11 @@ config :phoenix,
 config :id_didi_sh, :identity,
   issuer: "http://localhost:4002",
   allow_dev_keys: true
+
+# Two registered OAuth resources, so audience binding (OAUTH-10) has something
+# to be confused with. Production registers MemoPop only (config.exs).
+config :id_didi_sh, :identity,
+  oauth_resources: [
+    %{uri: "https://memopop.didi.sh", name: "MemoPop"},
+    %{uri: "https://decks.didi.sh", name: "DidiDecks"}
+  ]
