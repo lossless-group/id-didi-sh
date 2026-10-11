@@ -167,11 +167,27 @@ defmodule IdDidiShWeb.OAuthTest do
     )
   end
 
+  defp hash(raw), do: :crypto.hash(:sha256, raw)
+
+  # Rows whose column equals `value`, bound both as TEXT and as BLOB.
+  defp stored_count(table, column, value) do
+    for param <- [value, {:blob, value}], reduce: 0 do
+      acc ->
+        %{rows: [[n]]} =
+          IdDidiSh.Repo.query!("SELECT count(*) FROM #{table} WHERE #{column} = ?", [param])
+
+        acc + n
+    end
+  end
+
   # Verify exactly as a resource server does: fetch the published JWKS, pick
   # the key by kid, check the EdDSA signature. Nothing private is used.
   defp verify_against_jwks(access_token) do
     %{"keys" => keys} = build_conn() |> get("/.well-known/jwks.json") |> json_response(200)
-    %JOSE.JWS{fields: header} = JOSE.JWT.peek_protected(access_token)
+    # The protected header exactly as transmitted (JOSE's JWS struct keeps
+    # alg out of its `fields`, so read the segment itself).
+    [segment | _] = String.split(access_token, ".")
+    header = segment |> Base.url_decode64!(padding: false) |> Jason.decode!()
     key = Enum.find(keys, &(&1["kid"] == header["kid"]))
     assert key, "no JWKS key matches the token's kid"
 
@@ -568,21 +584,10 @@ defmodule IdDidiShWeb.OAuthTest do
     test "codes are stored only as hashes" do
       flow = code_flow()
 
-      raw_hits =
-        IdDidiSh.Repo.query!(
-          "SELECT count(*) FROM oauth_authorization_codes WHERE code_hash = ?",
-          [flow.code]
-        )
-
-      assert raw_hits.rows == [[0]]
-
-      hashed =
-        IdDidiSh.Repo.query!(
-          "SELECT count(*) FROM oauth_authorization_codes WHERE code_hash = ?",
-          [:crypto.hash(:sha256, flow.code)]
-        )
-
-      assert hashed.rows == [[1]]
+      # Ecto stores :binary columns as BLOB, and exqlite binds a bare binary
+      # as TEXT, so each value is checked in both forms.
+      assert stored_count("oauth_authorization_codes", "code_hash", flow.code) == 0
+      assert stored_count("oauth_authorization_codes", "code_hash", hash(flow.code)) == 1
     end
   end
 
@@ -619,12 +624,8 @@ defmodule IdDidiShWeb.OAuthTest do
       flow = code_flow()
       %{"refresh_token" => rt} = json_response(exchange(flow), 200)
 
-      raw_hits =
-        IdDidiSh.Repo.query!("SELECT count(*) FROM oauth_refresh_tokens WHERE token_hash = ?", [
-          rt
-        ])
-
-      assert raw_hits.rows == [[0]]
+      assert stored_count("oauth_refresh_tokens", "token_hash", rt) == 0
+      assert stored_count("oauth_refresh_tokens", "token_hash", hash(rt)) == 1
 
       other_client = client!()
       assert %{"error" => "invalid_grant"} = json_response(refresh(other_client, rt), 400)
