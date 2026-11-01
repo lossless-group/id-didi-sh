@@ -30,6 +30,7 @@ tags:
   - MemoPop
   - Id-Didi-Sh
 publish: true
+type: Issues
 ---
 
 # Claude connectors need didi.sh to be an OAuth server

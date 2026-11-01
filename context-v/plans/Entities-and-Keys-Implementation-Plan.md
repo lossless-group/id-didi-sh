@@ -21,6 +21,7 @@ hex_code: z82qld
 date_authored_initial_draft: 2026-08-20
 date_authored_current_draft: 2026-08-20
 publish: false
+type: Plans
 ---
 
 # Entities and keys — implementation plan for id-didi-sh

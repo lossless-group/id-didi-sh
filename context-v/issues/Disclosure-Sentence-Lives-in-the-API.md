@@ -19,6 +19,7 @@ hex_code: ua1e49
 date_authored_initial_draft: 2026-08-20
 date_authored_current_draft: 2026-08-20
 publish: false
+type: Issues
 ---
 
 # The removal disclosure sentence lives in the API

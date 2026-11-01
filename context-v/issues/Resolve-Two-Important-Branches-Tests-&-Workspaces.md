@@ -21,6 +21,7 @@ hex_code: 0j8o4a
 date_authored_initial_draft: 2026-08-21
 date_authored_current_draft: 2026-08-21
 publish: false
+type: Issues
 ---
 
 # resolve two important branches — tests and workspaces

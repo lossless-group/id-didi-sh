@@ -21,6 +21,7 @@ hex_code: e8z7vs
 date_authored_initial_draft: 2026-08-21
 date_authored_current_draft: 2026-08-21
 publish: false
+type: Issues
 ---
 
 # splash and site have no agreed division of labor

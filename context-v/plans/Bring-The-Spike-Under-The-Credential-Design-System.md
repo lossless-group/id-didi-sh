@@ -22,6 +22,7 @@ site_uuid: 07fe3f7f-73ea-4055-b095-c5670f180e76
 hex_code: 62q852
 date_authored_initial_draft: 2026-08-21
 date_authored_current_draft: 2026-08-21
+type: Plans
 ---
 
 ## Where we are
