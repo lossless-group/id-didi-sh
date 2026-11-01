@@ -11,7 +11,6 @@ semantic_version: 0.0.0.1
 status: Open
 tags:
   - Exploration
-  - Id-Didi-Sh
   - Corpora-Builder
   - Identity
   - Workspaces

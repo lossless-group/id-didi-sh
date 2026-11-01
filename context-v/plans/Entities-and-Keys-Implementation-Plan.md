@@ -11,7 +11,6 @@ semantic_version: 0.0.0.1
 status: Draft
 tags:
   - Plan
-  - Id-Didi-Sh
   - Entities
   - BYOK
   - Credentials

@@ -11,7 +11,6 @@ semantic_version: 0.0.0.4
 status: Open
 tags:
   - Exploration
-  - Id-Didi-Sh
   - Secrets-Management
   - MCP
   - Capability-Plane
