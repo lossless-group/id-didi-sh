@@ -8,7 +8,7 @@ authors:
 augmented_with:
   - Claude Code on Claude Opus 5 (1M context)
 semantic_version: 0.0.0.1
-status: Open
+status: Draft
 tags:
   - Exploration
   - Corpora-Builder

@@ -8,7 +8,8 @@ authors:
 augmented_with:
   - Claude Code on Claude Opus 5
 semantic_version: 0.0.0.1
-status: Draft
+status: Partially-Shipped
+date_first_published: 2026-08-20
 tags:
   - Plan
   - Entities

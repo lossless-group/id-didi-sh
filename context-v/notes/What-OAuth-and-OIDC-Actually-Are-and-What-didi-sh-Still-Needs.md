@@ -19,6 +19,7 @@ hex_code: pdabr5
 date_authored_initial_draft: 2026-08-20
 date_authored_current_draft: 2026-08-20
 publish: false
+status: Reference
 type: Notes
 ---
 

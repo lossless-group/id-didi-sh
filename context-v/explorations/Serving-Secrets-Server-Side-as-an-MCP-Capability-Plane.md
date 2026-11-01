@@ -8,7 +8,7 @@ authors:
 augmented_with:
   - Claude Code on Claude Fable 5
 semantic_version: 0.0.0.4
-status: Open
+status: Draft
 tags:
   - Exploration
   - Secrets-Management
