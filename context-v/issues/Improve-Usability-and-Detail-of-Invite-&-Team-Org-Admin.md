@@ -14,7 +14,7 @@ status: Open
 site_uuid: 3ae43aeb-da15-40e4-b309-90a0205b7ae8
 hex_code: lo9njl
 summary: >-
-  Michael invited two Humain VC partners to the humain-vc entity on 2026-11-20.
+  Michael invited two partners of a VC firm to its entity on 2026-11-20.
   Nothing showed that an email was sent, and there was no list of who had been
   invited. Suggests that v1 of the invite dashboard is basic and missing key
   features.
@@ -28,7 +28,7 @@ tags:
 
 ## What happened
 
-On 2026-11-20 Michael invited two partners from Humain VC (linea@humain.vc and aneil@humain.vc) to the `humain-vc` entity.
+On 2026-11-20 Michael invited two other partners of the VC firm to its entity.
 
 - **No sign an email was sent.** After sending an invite, nothing confirms that it went out.
 - **No list of invites.** The admin can't see who has been invited, whether they've accepted, or what is still pending.
