@@ -675,3 +675,15 @@ Tracked here so it does not get rediscovered:
 - **`ModeToggle.astro` uses augment-it's mode vocabulary.** Its `aria-label`s read "Demo mode (vibrant)", "Operator mode (dark)", "Ledger mode (light)". The didi.sh vocabulary is **UV lamp / the vault / security paper**. The labels should be brought over.
 - **`ModeToggle.astro` falls back to `'vibrant'`** when reading the current mode, while `BaseLayout.astro` ships `data-mode="dark"`. Dark is the default; the fallback should say so.
 - **The Phoenix app does not use this system at all.** `assets/css/app.css` is stock Tailwind 4 + daisyUI with the generator's Phoenix-purple dark and Phoenix-orange light themes, and it drives `data-theme` (`light`/`dark`/`system`) rather than `data-mode` (`dark`/`light`/`vibrant`). See `context-v/plans/Bring-The-Spike-Under-The-Credential-Design-System.md`.
+
+### Trademark pack
+
+In `public/`, every piece outlined to paths (an `<img>` cannot load web fonts).
+
+| Piece | File |
+|---|---|
+| appIcon | `appIcon__Didi-Sh-ID.svg` |
+| favicon | `favicon.svg` (`id` outlined in IBM Plex Mono 700) |
+| wordmark | `wordmark__Didi-Sh-ID--{Dark,Light}-Mode.svg`: *didi.sh* in IBM Plex Sans 700 with the dot in verdigris, then *ID* in IBM Plex Mono 600 caps at +0.14em, dim, as the header sets it |
+| trademark | `trademark__Didi-Sh-ID--{Dark,Light}-Mode.svg`: appIcon + wordmark |
+
