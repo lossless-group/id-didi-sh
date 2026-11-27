@@ -6,7 +6,7 @@ defmodule IdDidiShWeb.AccountControllerTest do
   member is gated on admin and invites an unknown address rather than
   refusing it.
   """
-  use IdDidiShWeb.ConnCase, async: true
+  use IdDidiShWeb.ConnCase, async: false
 
   import Swoosh.TestAssertions
 

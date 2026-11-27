@@ -3,7 +3,7 @@ defmodule IdDidiShWeb.ApiRefusalsTest do
   The headless API's refusals: what a consumer app's own login UI gets back
   when it sends nothing, sends garbage, or sends a forged cookie.
   """
-  use IdDidiShWeb.ConnCase, async: true
+  use IdDidiShWeb.ConnCase, async: false
 
   defp forged_cookie do
     other = JOSE.JWK.generate_key({:okp, :Ed25519})

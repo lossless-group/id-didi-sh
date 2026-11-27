@@ -5,7 +5,7 @@ defmodule IdDidiShWeb.OAuthTokenTest do
   `oauth_test.exs` (OAUTH-01..10); this file covers the branches those flows
   never take: confidential clients over HTTP Basic, and the error envelope.
   """
-  use IdDidiShWeb.ConnCase, async: true
+  use IdDidiShWeb.ConnCase, async: false
 
   @claude_cb "https://claude.ai/api/mcp/auth_callback"
 

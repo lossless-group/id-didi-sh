@@ -4,7 +4,7 @@ defmodule IdDidiShWeb.AuthControllerTest do
   `redirect_test.exs`; this file pins input handling and the rule that the
   page never reveals whether an account exists.
   """
-  use IdDidiShWeb.ConnCase, async: true
+  use IdDidiShWeb.ConnCase, async: false
 
   import Swoosh.TestAssertions
 
