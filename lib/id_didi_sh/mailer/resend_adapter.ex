@@ -30,11 +30,17 @@ defmodule IdDidiSh.Mailer.ResendAdapter do
       |> Enum.reject(fn {_k, v} -> is_nil(v) end)
       |> Map.new()
 
-    case Req.post(@endpoint,
-           json: payload,
-           auth: {:bearer, Keyword.fetch!(config, :api_key)},
-           retry: false
-         ) do
+    # `req_options` is the test seam (a `Req.Test` plug); production never
+    # sets it, so the request below is unchanged there.
+    req_options =
+      [
+        json: payload,
+        auth: {:bearer, Keyword.fetch!(config, :api_key)},
+        retry: false
+      ]
+      |> Keyword.merge(Keyword.get(config, :req_options, []))
+
+    case Req.post(@endpoint, req_options) do
       {:ok, %{status: status, body: body}} when status in 200..299 -> {:ok, body}
       {:ok, %{status: status, body: body}} -> {:error, {status, body}}
       {:error, reason} -> {:error, reason}
