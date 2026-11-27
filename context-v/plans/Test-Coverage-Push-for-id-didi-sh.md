@@ -103,23 +103,39 @@ The threshold is set to the measured result **rounded down to the integer**,
 not to an aspirational number — a threshold above reality gets disabled the
 first time it blocks a hotfix. `precommit` gains `test --cover`.
 
-## Phase 5 — prod config smoke via Doppler (separate, optional)
+## Phase 5 — prod config smoke, and Doppler as the secret store
 
-`MIX_ENV=prod mix run` fails locally because `config/runtime.exs` raises without
-`DATABASE_PATH`, `SECRET_KEY_BASE`, and friends. Doppler (CLI 3.77.1 installed,
-this directory not yet linked to a project) can supply them:
+**The smoke check needs no real secrets.** `config/runtime.exs` only requires
+them to be *present*; the non-secret prod settings (`PHX_HOST`, `PORT`,
+`DATABASE_PATH`, `ID_ISSUER`, `ID_COOKIE_DOMAIN`) live in `fly.toml [env]`.
+Run on 2026-11-26, it confirmed `kay-os` is in the prod resource list:
 
 ```bash
-doppler setup                      # link this dir to the id-didi-sh project/config
-doppler run -- env MIX_ENV=prod mix run --no-start \
-  -e 'IO.inspect IdDidiSh.OAuth.resources()'
+MIX_ENV=prod SECRET_KEY_BASE=$(openssl rand -base64 48) \
+  DATABASE_PATH=/tmp/smoke.db PHX_HOST=id.didi.sh \
+  mix run --no-start -e 'IO.inspect IdDidiSh.OAuth.resources()'
 ```
 
-This proves the prod config resolves (e.g. that `kay-os` is in the prod
-resource list) without deploying. It is **not** part of the coverage gate:
-tests must keep passing with zero secrets, or CI and every fresh clone break.
-Secrets stay in Doppler; nothing from it is written to `context-v/`,
-`changelog/`, or any committed file.
+**Doppler is for the real secrets.** This directory is linked to the
+`id-didi-sh` project, `prd` config. It needs exactly the Fly secrets:
+`SECRET_KEY_BASE`, `ID_SIGNING_JWK`, `CREDENTIAL_ENCRYPTION_KEY`,
+`RESEND_API_KEY`, and `EMAIL_FROM` if set. `fly secrets list` shows only
+digests, so values come off the running machine, piped so they are never
+printed:
+
+```bash
+fly ssh console -a id-didi-sh -C 'printenv NAME' | tr -d '\r\n' \
+  | doppler secrets set NAME --silent
+```
+
+Copy `ID_SIGNING_JWK` and `CREDENTIAL_ENCRYPTION_KEY` exactly, never
+regenerate them: a new signing key signs everyone out, a new encryption key
+makes every stored credential unreadable. Next step after that: Doppler's Fly
+integration, so Doppler pushes to Fly and Fly stops being edited by hand.
+
+Neither is part of the coverage gate: tests must keep passing with zero
+secrets, or CI and every fresh clone break. Nothing from Doppler is written to
+`context-v/`, `changelog/`, or any committed file.
 
 ## Done when
 
@@ -132,8 +148,8 @@ Secrets stay in Doppler; nothing from it is written to `context-v/`,
 - [x] `test_coverage` pinned in `mix.exs` at **92** (measured 92.87%),
       `precommit` runs `test --cover`
 - [x] changelog entry
-- [ ] Phase 5 (Doppler): the `id-didi-sh` project exists with `dev`,
-      `dev_personal`, `prd`; `prd` holds no secrets yet
+- [x] Phase 5 smoke: prod config resolves, `kay-os` included (no secrets needed)
+- [ ] Phase 5 Doppler: dir linked to `id-didi-sh`/`prd`; the five secrets not yet copied
 - [ ] No CI runs `mix test`. The gate holds only where `precommit` runs
 - [ ] `origin/hygene/test-coverage` deleted, branch issue marked Resolved
       (needs Michael's go-ahead — not yet given)
