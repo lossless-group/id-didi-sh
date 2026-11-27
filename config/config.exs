@@ -9,7 +9,11 @@ import Config
 
 config :id_didi_sh,
   ecto_repos: [IdDidiSh.Repo],
-  generators: [timestamp_type: :utc_datetime]
+  generators: [timestamp_type: :utc_datetime],
+  # Read at runtime by code that must behave differently in prod (the Vault
+  # refuses to boot without a real key). Before this was set, that check was
+  # always false and prod silently used the published dev key.
+  env: config_env()
 
 # Configure the endpoint
 config :id_didi_sh, IdDidiShWeb.Endpoint,
