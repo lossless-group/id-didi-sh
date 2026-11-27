@@ -11,7 +11,37 @@ defmodule IdDidiSh.MixProject do
       aliases: aliases(),
       deps: deps(),
       compilers: [:phoenix_live_view] ++ Mix.compilers(),
-      listeners: [Phoenix.CodeReloader]
+      listeners: [Phoenix.CodeReloader],
+      test_coverage: test_coverage()
+    ]
+  end
+
+  # The threshold is the measured floor, rounded down — not an aspiration. A
+  # gate set above reality gets disabled the first time it blocks a hotfix.
+  # Raise it when coverage rises; never lower it to get a change through.
+  # See context-v/plans/Test-Coverage-Push-for-id-didi-sh.md.
+  defp test_coverage do
+    [
+      summary: [threshold: 92],
+      ignore_modules: [
+        # embed_templates modules: the cover tool attributes HEEx to the
+        # template file, so these read 0% even when every page is rendered
+        # by a tested controller. Testing them directly would prove nothing.
+        ~r/^IdDidiShWeb\..*HTML$/,
+        IdDidiShWeb.Layouts,
+        # Generator output nobody edits. Comes off this list if we start to.
+        IdDidiShWeb.CoreComponents,
+        # The `use IdDidiShWeb, :controller` macro module.
+        IdDidiShWeb,
+        # Supervision and telemetry wiring, exercised by booting at all.
+        IdDidiSh.Application,
+        IdDidiShWeb.Telemetry,
+        # Release-only migration entry point (no Mix in the release).
+        IdDidiSh.Release,
+        # Test support.
+        IdDidiSh.DataCase,
+        IdDidiShWeb.ConnCase
+      ]
     ]
   end
 
@@ -93,7 +123,12 @@ defmodule IdDidiSh.MixProject do
         "esbuild id_didi_sh --minify",
         "phx.digest"
       ],
-      precommit: ["compile --warnings-as-errors", "deps.unlock --unused", "format", "test"]
+      precommit: [
+        "compile --warnings-as-errors",
+        "deps.unlock --unused",
+        "format",
+        "test --cover"
+      ]
     ]
   end
 end

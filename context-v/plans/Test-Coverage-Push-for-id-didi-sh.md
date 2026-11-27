@@ -7,8 +7,8 @@ authors:
   - Michael Staton
 augmented_with:
   - Claude Code on Claude Opus 5.5
-semantic_version: 0.0.0.1
-status: In-Progress
+semantic_version: 0.0.1.0
+status: Partially-Shipped
 tags:
   - Plan
   - Test-Coverage
@@ -78,7 +78,7 @@ variable afterwards.
 |---|---|---|
 | `Mailer.ResendAdapter` | 0% | `Req.Test` stub: 2xx → `{:ok, body}`; 4xx → `{:error, {status, body}}`; transport error → `{:error, reason}`; nil fields dropped from payload; `{name, addr}` formatting. Needs a `plug:` option threaded through config so tests never touch the network |
 | `Mix.Tasks.Id.*` (7 tasks) | 0% | Each task run with `Mix.Task.rerun/2` against the sandbox repo, asserting the rows/output. `id.email.test` uses the test mailer. `id.gen.keypair` asserts it prints a parseable Ed25519 JWK |
-| `Release` | 0% | `migrate/0` against the test repo is a no-op that must not raise; `rollback/2` is not exercised (destructive, and it's the generator's code) — **ignored** |
+| `Release` | 0% | **Ignored.** Release-only entry point; `rollback/2` is destructive and it is generator code |
 
 ## Phase 4 — pin the number
 
@@ -88,12 +88,13 @@ In `mix.exs`:
 test_coverage: [
   summary: [threshold: <measured floor>],
   ignore_modules: [
-    IdDidiShWeb.CoreComponents,      # generator output
+    ~r/^IdDidiShWeb\..*HTML$/,       # embed_templates (matched without "Elixir.")
     IdDidiShWeb.Layouts,             # embed_templates
-    ~r/HTML$/,                       # embed_templates (PageHTML, AuthHTML, …)
-    IdDidiSh.DataCase, IdDidiShWeb.ConnCase,  # test support
+    IdDidiShWeb.CoreComponents,      # generator output
+    IdDidiShWeb,                     # the `use` macro module
+    IdDidiSh.Application, IdDidiShWeb.Telemetry,  # supervision wiring
     IdDidiSh.Release,                # see Phase 3
-    IdDidiShWeb.Telemetry, IdDidiSh.Application  # supervision wiring
+    IdDidiSh.DataCase, IdDidiShWeb.ConnCase  # test support
   ]
 ]
 ```
@@ -122,10 +123,17 @@ Secrets stay in Doppler; nothing from it is written to `context-v/`,
 
 ## Done when
 
-- [ ] Phase 1 tests green
-- [ ] Phase 2 tests green
-- [ ] Phase 3 tests green
-- [ ] `test_coverage` pinned in `mix.exs`, `mix test --cover` passes
-- [ ] changelog entry
+- [x] Phase 1 tests green (`539bb57`)
+- [x] Phase 2 tests green (`90f1d74`)
+- [x] Phase 3 tests green (`be24d4d`)
+- [x] Phase 1b, added mid-push: every OAuth grant refusal, `Token.verify`,
+      and the headless API's 400/401s (`0ef6497`). The cover report showed
+      these were the largest security-relevant gap left
+- [x] `test_coverage` pinned in `mix.exs` at **92** (measured 92.87%),
+      `precommit` runs `test --cover`
+- [x] changelog entry
+- [ ] Phase 5 (Doppler): the `id-didi-sh` project exists with `dev`,
+      `dev_personal`, `prd`; `prd` holds no secrets yet
+- [ ] No CI runs `mix test`. The gate holds only where `precommit` runs
 - [ ] `origin/hygene/test-coverage` deleted, branch issue marked Resolved
       (needs Michael's go-ahead — not yet given)
