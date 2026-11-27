@@ -79,7 +79,10 @@ config :id_didi_sh, :identity,
   allow_dev_keys: false,
   # OAuth authorization server (Claude connectors). Resources are the token
   # audiences a client may ask for (RFC 8707); add each new connector here.
-  oauth_resources: [%{uri: "https://memopop.didi.sh", name: "MemoPop"}],
+  oauth_resources: [
+    %{uri: "https://memopop.didi.sh", name: "MemoPop"},
+    %{uri: "https://mcp.kay-os.lol", name: "kay-os"}
+  ],
   # https redirect URIs a client may register, exact match. Loopback
   # (localhost / 127.0.0.1, any port) is always allowed for Claude Code.
   oauth_redirect_uris: ["https://claude.ai/api/mcp/auth_callback"],
