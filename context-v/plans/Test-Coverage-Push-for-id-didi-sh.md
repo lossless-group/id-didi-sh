@@ -8,7 +8,7 @@ authors:
 augmented_with:
   - Claude Code on Claude Opus 5.5
 semantic_version: 0.0.1.0
-status: Partially-Shipped
+status: Shipped
 tags:
   - Plan
   - Test-Coverage
@@ -149,7 +149,8 @@ secrets, or CI and every fresh clone break. Nothing from Doppler is written to
       `precommit` runs `test --cover`
 - [x] changelog entry
 - [x] Phase 5 smoke: prod config resolves, `kay-os` included (no secrets needed)
-- [ ] Phase 5 Doppler: dir linked to `id-didi-sh`/`prd`; the five secrets not yet copied
-- [ ] No CI runs `mix test`. The gate holds only where `precommit` runs
-- [ ] `origin/hygene/test-coverage` deleted, branch issue marked Resolved
-      (needs Michael's go-ahead — not yet given)
+- [x] Phase 5 Doppler: all five prod secrets in `id-didi-sh`/`prd`, verified
+      against Fly by hash. Copying them found prod had no
+      `CREDENTIAL_ENCRYPTION_KEY` and was using the dev key; fixed in `5274de7`
+- [x] CI: `.github/workflows/test.yml` runs the precommit checks on every push and PR
+- [x] `origin/hygene/test-coverage` kept on purpose, for posterity

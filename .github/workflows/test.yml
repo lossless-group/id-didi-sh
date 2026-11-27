@@ -1,0 +1,66 @@
+name: Test
+
+# The same gate as `mix precommit`, run where nobody can forget it: compile
+# with warnings as errors, check formatting, and run the suite with the
+# coverage threshold pinned in mix.exs (test_coverage). No secrets are used:
+# the suite must pass on a fresh clone with nothing configured.
+
+on:
+  push:
+    branches: [main, development, master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      MIX_ENV: test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # Pinned to the Dockerfile's versions, so CI tests what ships.
+      - name: Set up Elixir and OTP
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.20.2"
+          otp-version: "29.0.3"
+          version-type: strict
+
+      - name: Cache deps and build
+        uses: actions/cache@v4
+        with:
+          path: |
+            deps
+            _build
+          key: mix-${{ runner.os }}-${{ hashFiles('mix.lock') }}
+          restore-keys: mix-${{ runner.os }}-
+
+      - name: Install deps
+        run: mix deps.get
+
+      - name: Compile (warnings are errors)
+        run: mix compile --warnings-as-errors
+
+      - name: Check formatting
+        run: mix format --check-formatted
+
+      # assets_built_test.exs asserts the JS and CSS bundles exist, and
+      # priv/static/assets/ is gitignored, so build them first.
+      - name: Build assets
+        run: |
+          mix assets.setup
+          mix assets.build
+
+      - name: Test with coverage gate
+        run: mix test --cover

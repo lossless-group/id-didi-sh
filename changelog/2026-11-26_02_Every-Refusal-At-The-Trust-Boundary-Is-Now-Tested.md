@@ -2,7 +2,7 @@
 site_uuid: 1b0ccc76-5171-4c15-b423-715c4b8cadb3
 hex_code: q86j8n
 title: "Every Refusal at the Trust Boundary Is Now Tested"
-lede: "Coverage went from 68% to 93%, with security paths first, and it is now a gate that fails the precommit if it slips. Kay-OS joins MemoPop as an OAuth resource."
+lede: "Coverage went from 68% to 93%, with security paths first. It is now a gate, enforced by mix precommit and by a CI job that runs on every push."
 publish: true
 date_created: 2026-11-26
 date_modified: 2026-11-26
@@ -18,8 +18,8 @@ tags:
   - Security
   - Id-Didi-Sh
 files_changed:
-  - config/config.exs
   - mix.exs
+  - .github/workflows/test.yml
   - lib/id_didi_sh/mailer/resend_adapter.ex
   - test/
   - context-v/plans/Test-Coverage-Push-for-id-didi-sh.md
@@ -39,8 +39,6 @@ that its name promised.
 
 ## What's New?
 
-- **Kay-OS is an OAuth resource.** Claude connectors pointed at
-  `https://mcp.kay-os.lol` can get tokens scoped to it, alongside MemoPop.
 - **The token endpoint's refusals are pinned.** Expired, replayed, and
   cross-client codes; a `redirect_uri` that changed; a consenting session
   that has ended; expired and cross-client refresh tokens. Removing someone
@@ -59,12 +57,17 @@ that its name promised.
 - **Coverage is a gate.** `mix precommit` now runs `test --cover` with a
   threshold of 92%, set just under the measured 92.87% rather than at an
   aspirational number.
+- **CI enforces it.** A new GitHub Actions job runs the same checks on every
+  push and pull request, so the gate no longer depends on someone remembering
+  to run it locally. The checks are: compile with warnings as errors, format
+  check, build assets, and `test --cover`. It uses the Dockerfile's Elixir and
+  OTP versions and no secrets.
 
 ## By the numbers
 
 | | Before | After |
 |---|---|---|
-| Tests | 137 | 231 |
+| Tests | 137 | 236 |
 | Line coverage | 68% | 93% |
 | `AccountController` | 0% | 97% |
 | `OAuthTokenController`, `Plugs.CORS`, `Keys` | 45–67% | 100% |
@@ -76,5 +79,5 @@ that its name promised.
   the release entry point. Each one is listed in `mix.exs` with the reason.
 - **Raise the threshold when coverage rises.** Lowering it to get a change
   through defeats the point.
-- **No CI runs `mix test` yet.** The only workflow builds the splash, so the
-  gate holds only where `mix precommit` actually gets run.
+- **Kay-OS shipped the same day** as its own entry. This one is only the
+  tests.
